@@ -25,6 +25,10 @@ Módulos: Painel · Minhas pendências · Alertas · Solicitações · Aprovaç�
 
 ## Início rápido (desenvolvimento, Windows/Linux/macOS)
 
+**Windows, sem digitar comandos:** dê dois cliques em `INICIAR.bat` (precisa do Python 3.12+ instalado). Na primeira vez ele prepara tudo sozinho e depois abre o sistema em http://127.0.0.1:8000.
+
+Ou pelo terminal:
+
 ```bash
 python -m venv .venv
 .venv\Scripts\activate            # Linux/macOS: source .venv/bin/activate
