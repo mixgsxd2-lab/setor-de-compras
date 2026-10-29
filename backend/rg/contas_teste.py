@@ -23,6 +23,9 @@ CONTAS_TESTE = [
      "setor_codigo": "controladoria", "cargo": "Auditor Interno"},
 ]
 
+# Perfis oferecidos no seletor da tela inicial (as demais contas existem, apenas não aparecem no seletor).
+PERFIS_EXPLORAR = {"solicitante", "gestor", "comprador", "financeiro"}
+
 
 def semear(cur, hash_senha: str, termo_versao: str) -> list[str]:
     """Cria as contas de demonstração que ainda não existem. Retorna os e-mails criados."""

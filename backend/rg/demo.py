@@ -32,30 +32,10 @@ TABELAS = ["rg.usuarios", "rg.senhas_historico", "rg.categorias", "rg.materiais"
            "rg.assinaturas", "rg.solicitacao_historico", "rg.notificacoes", "audit.eventos"]
 
 USUARIOS_EXTRAS = [
-    ("solicitante", "Aline Duarte", "centro_cirurgico", "Enfermeira do Centro Cirúrgico"),
-    ("gestor", "Ricardo Farias", "centro_cirurgico", "Coordenador do Centro Cirúrgico"),
     ("solicitante", "Bruno Siqueira", "pronto_socorro", "Enfermeiro Assistencial"),
     ("gestor", "Luciana Teixeira", "pronto_socorro", "Coordenadora do Pronto Socorro"),
-    ("solicitante", "Camila Rocha", "laboratorio", "Biomédica"),
-    ("gestor", "Eduardo Pinheiro", "laboratorio", "Responsável Técnico do Laboratório"),
     ("solicitante", "Tatiane Gomes", "farmacia", "Farmacêutica"),
     ("gestor", "Sérgio Lopes", "farmacia", "Farmacêutico Responsável"),
-    ("solicitante", "Diego Martins", "engenharia_clinica", "Técnico em Equipamentos"),
-    ("gestor", "Mônica Ribeiro", "engenharia_clinica", "Engenheira Clínica"),
-    ("solicitante", "Paulo Henrique Costa", "tecnologia", "Analista de Suporte"),
-    ("gestor", "André Barros", "tecnologia", "Coordenador de TI"),
-    ("solicitante", "Vanessa Freitas", "hotelaria", "Supervisora de Higienização"),
-    ("gestor", "Gabriela Nogueira", "hotelaria", "Gerente de Hotelaria"),
-    ("solicitante", "Rafael Antunes", "uti_neonatal", "Enfermeiro da UTI Neonatal"),
-    ("gestor", "Cláudia Vasconcelos", "uti_neonatal", "Coordenadora da UTI Neonatal"),
-    ("solicitante", "Letícia Moraes", "nutricao", "Nutricionista"),
-    ("gestor", "Márcia Campos", "nutricao", "Coordenadora de Nutrição"),
-    ("solicitante", "Otávio Rezende", "manutencao", "Técnico de Manutenção"),
-    ("gestor", "Jorge Almeida", "manutencao", "Supervisor de Manutenção"),
-    ("solicitante", "Simone Carvalho", "administracao", "Assistente Administrativa"),
-    ("gestor", "Luiz Fernando Sá", "administracao", "Gerente Administrativo"),
-    ("comprador", "Beatriz Rocha", "suprimentos", "Compradora"),
-    ("recebimento", "Wagner Souza", "suprimentos", "Almoxarife"),
 ]
 
 CATEGORIAS = [
@@ -127,27 +107,6 @@ FORNECEDORES = [
      ["Equipamentos médicos", "Serviços técnicos"]),
     ("Lagoa Produtos Hospitalares Ltda", "Lagoa Hospitalar", "Rio Grande", "RS", "Élton Brum",
      ["Materiais médico-hospitalares", "Medicamentos", "Higiene e limpeza"]),
-    ("Pampa Diagnósticos e Reagentes Ltda", "Pampa Diagnósticos", "Porto Alegre", "RS", "Fabiana Lopes",
-     ["Laboratório e diagnóstico"]),
-    ("CleanMax Higiene Profissional Ltda", "CleanMax", "Caxias do Sul", "RS", "Rogério Pasa",
-     ["Higiene e limpeza", "EPIs e rouparia"]),
-    ("NutriCare Alimentos Especiais Ltda", "NutriCare", "Curitiba", "PR", "Silvia Maranhão", ["Nutrição e dietas"]),
-    ("Papelaria Central do Sul Ltda", "Central do Sul", "Rio Grande", "RS", "Renato Ávila",
-     ["Material de escritório"]),
-    ("TecnoData Informática Ltda", "TecnoData", "Porto Alegre", "RS", "Cíntia Bragança",
-     ["Tecnologia da informação", "Material de escritório"]),
-    ("Construfácil Materiais de Construção Ltda", "Construfácil", "Pelotas", "RS", "Anderson Pires",
-     ["Manutenção predial"]),
-    ("ProtegeMed EPIs e Uniformes Ltda", "ProtegeMed", "Novo Hamburgo", "RS", "Débora Klein",
-     ["EPIs e rouparia", "Materiais médico-hospitalares"]),
-    ("Vitalis Engenharia Clínica Ltda", "Vitalis", "Porto Alegre", "RS", "Henrique Maciel",
-     ["Serviços técnicos", "Equipamentos médicos"]),
-    ("Cirúrgica Atlântico Ltda", "Cirúrgica Atlântico", "Florianópolis", "SC", "Paula Werner",
-     ["Materiais médico-hospitalares", "Equipamentos médicos", "Laboratório e diagnóstico"]),
-    ("Hospitalar Minuano Comércio Ltda", "Minuano", "Santa Maria", "RS", "Vinícius Tavares",
-     ["Medicamentos", "Nutrição e dietas", "Materiais médico-hospitalares"]),
-    ("Sulpar Serviços Ambientais Ltda", "Sulpar", "Canoas", "RS", "Mauro Gehlen",
-     ["Serviços técnicos", "Manutenção predial", "Higiene e limpeza"]),
 ]
 
 SETOR_CATEGORIAS = {
@@ -210,64 +169,16 @@ MOTIVOS_CANCELAMENTO = ["Demanda atendida por remanejamento de estoque entre set
 
 # (setor, status final, urgência, dias atrás aproximados, marcador opcional)
 CENARIOS = [
-    # Pendências da conta de demonstração do gestor/solicitante (UTI Adulto)
     ("uti_adulto", "aguardando_gestor", "urgente", 0.2, "equipamento"),
-    ("uti_adulto", "aguardando_gestor", "normal", 1.5, None),
     ("uti_adulto", "devolvida", "normal", 3, None),
     ("uti_adulto", "em_cotacao", "urgente", 4, None),
     ("uti_adulto", "enviado", "normal", 12, None),
     ("uti_adulto", "concluida", "normal", 35, None),
-    ("uti_adulto", "concluida", "imediato", 70, None),
-    ("uti_adulto", "concluida", "normal", 120, None),
-    # Diretoria
-    ("engenharia_clinica", "aguardando_diretoria", "urgente", 1, "gestor"),
-    ("tecnologia", "aguardando_diretoria", "normal", 2, "caro"),
-    ("centro_cirurgico", "aguardando_diretoria", "imediato", 0.5, "equipamento"),
     ("pronto_socorro", "ped_aguardando_diretoria", "urgente", 9, "caro"),
-    # Financeiro
-    ("farmacia", "ped_aguardando_financeiro", "urgente", 7, None),
-    ("laboratorio", "ped_aguardando_financeiro", "normal", 10, None),
-    ("hotelaria", "ped_aguardando_financeiro", "normal", 6, None),
-    # Comprador
     ("pronto_socorro", "aprovada", "imediato", 1, None),
-    ("nutricao", "aprovada", "normal", 2, None),
-    ("administracao", "aprovada", "normal", 4, None),
-    ("centro_cirurgico", "em_cotacao", "urgente", 9, None),
-    ("manutencao", "em_cotacao", "normal", 8, "sem_propostas"),
-    ("uti_neonatal", "em_cotacao", "urgente", 6, None),
-    ("laboratorio", "aguardando_pedido", "normal", 9, None),
+    ("pronto_socorro", "concluida", "normal", 26, None),
+    ("farmacia", "ped_aguardando_financeiro", "urgente", 7, None),
     ("farmacia", "aguardando_pedido", "urgente", 8, None),
-    ("tecnologia", "ped_aprovado", "normal", 13, None),
-    # Recebimento
-    ("centro_cirurgico", "enviado", "urgente", 11, None),
-    ("farmacia", "enviado", "normal", 30, "atrasado"),
-    ("nutricao", "entregue_parcial", "normal", 22, None),
-    ("hotelaria", "entregue_parcial", "urgente", 25, None),
-    # Encerradas
-    ("laboratorio", "reprovada", "normal", 40, None),
-    ("administracao", "reprovada", "normal", 75, None),
-    ("tecnologia", "cancelada", "normal", 55, None),
-    ("pronto_socorro", "cancelada", "urgente", 95, None),
-    ("centro_cirurgico", "concluida", "urgente", 18, None),
-    ("pronto_socorro", "concluida", "imediato", 26, None),
-    ("farmacia", "concluida", "normal", 45, None),
-    ("laboratorio", "concluida", "normal", 52, None),
-    ("engenharia_clinica", "concluida", "normal", 60, "equipamento"),
-    ("hotelaria", "concluida", "normal", 66, None),
-    ("tecnologia", "concluida", "normal", 80, "caro"),
-    ("nutricao", "concluida", "urgente", 88, None),
-    ("uti_neonatal", "concluida", "normal", 100, None),
-    ("manutencao", "concluida", "normal", 110, "gestor"),
-    ("administracao", "concluida", "normal", 130, None),
-    ("farmacia", "concluida", "urgente", 145, None),
-    ("centro_cirurgico", "concluida", "normal", 160, None),
-    ("pronto_socorro", "concluida", "normal", 175, None),
-    ("laboratorio", "concluida", "normal", 190, None),
-    ("engenharia_clinica", "concluida", "normal", 205, None),
-    ("uti_neonatal", "concluida", "imediato", 150, "divergente"),
-    ("farmacia", "concluida", "normal", 215, None),
-    ("tecnologia", "concluida", "normal", 230, None),
-    ("hotelaria", "concluida", "normal", 240, None),
 ]
 
 ORDEM = ["aguardando_gestor", "devolvida", "reprovada", "cancelada", "aguardando_diretoria", "aprovada", "em_cotacao",
@@ -765,10 +676,7 @@ class Semeador:
         for papel, nome, setor, cargo in USUARIOS_EXTRAS:
             self.usuario(papel, nome, setor, cargo)
         # Cadastros aguardando análise do Administrador
-        for nome, email, setor, papel, cargo in (("Fábio Quintana", "fabio.quintana@hrg.demo", "imagem", "solicitante",
-                                                  "Técnico em Radiologia"),
-                                                 ("Isabela Duarte", "isabela.duarte@hrg.demo", "cme", "solicitante",
-                                                  "Enfermeira da CME")):
+        for nome, email, setor, papel, cargo in (("Fábio Quintana", "fabio.quintana@hrg.demo", "imagem", "solicitante", "Técnico em Radiologia"),):
             quando = self.agora - timedelta(hours=self.r.randint(3, 40))
             uid = str(uuid.uuid4())
             self.exec("""insert into rg.usuarios (id, email, nome, setor_codigo, cargo, papel, status, senha_hash,

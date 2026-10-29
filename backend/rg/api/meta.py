@@ -4,7 +4,7 @@ from __future__ import annotations
 from flask import Blueprint, current_app, jsonify
 
 from .. import __version__, rotulos
-from ..contas_teste import CONTAS_TESTE, SENHA_TESTE
+from ..contas_teste import CONTAS_TESTE, PERFIS_EXPLORAR, SENHA_TESTE
 from ..db import db
 from ..seguranca.sessao import requer_login, tx
 
@@ -39,7 +39,7 @@ def meta():
         "tempo_real": cfg["REALTIME_ENABLED"],
         "demo": demo,
         "contas_teste": ([{"papel": c["papel"], "nome": c["nome"], "email": c["email"], "setor": c["setor_codigo"],
-                           "cargo": c["cargo"], "senha": SENHA_TESTE} for c in CONTAS_TESTE] if demo else []),
+                           "cargo": c["cargo"], "senha": SENHA_TESTE} for c in CONTAS_TESTE if c["papel"] in PERFIS_EXPLORAR] if demo else []),
     })
 
 
