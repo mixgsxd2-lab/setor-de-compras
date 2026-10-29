@@ -8,5 +8,5 @@ else
   python -m rg.cli migrar
 fi
 exec gunicorn wsgi:app --bind "0.0.0.0:${PORT:-8000}" --worker-class gthread \
-  --workers 2 --threads 64 --timeout 120 --graceful-timeout 30 \
+  --workers "${WEB_CONCURRENCY:-2}" --threads 64 --timeout 120 --graceful-timeout 30 \
   --access-logfile - --forwarded-allow-ips "*"
