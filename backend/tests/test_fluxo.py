@@ -11,7 +11,6 @@ from conftest import (Cliente, acao, acao_pedido, ate_aprovada, ate_pedido, cria
 
 def test_fluxo_completo_ate_conclusao(clientes, usuarios):
     solicitante, gestor, comprador = clientes["solicitante"], clientes["gestor"], clientes["comprador"]
-    financeiro = clientes["financeiro"]
     recebimento = solicitante  # quem abriu a solicitação confirma o recebimento
 
     d = criar_solicitacao(solicitante)
@@ -24,11 +23,11 @@ def test_fluxo_completo_ate_conclusao(clientes, usuarios):
 
     # Visibilidade: Compras ainda não enxerga; ninguém fora do gestor aprova
     assert comprador.get(f"/api/v1/solicitacoes/{sid}").status_code == 404
-    for nome in ("solicitante", "comprador", "financeiro", "admin", "auditoria"):
+    for nome in ("solicitante", "comprador", "admin", "auditoria"):
         assert acao(clientes[nome], sid, "aprovar", versao=s["versao"]).status_code in (403, 404, 422), nome
 
     d = acao(gestor, sid, "aprovar", versao=s["versao"], texto="Necessidade confirmada.").get_json()
-    assert d["solicitacao"]["status"] == "aprovada"  # abaixo da alçada: segue direto para Compras
+    assert d["solicitacao"]["status"] == "aprovada"  # segue direto para Compras
     assert d["aprovacoes"][0]["nivel"] == "gestor" and d["aprovacoes"][0]["decisao"] == "aprovado"
 
     d = acao(comprador, sid, "iniciar_cotacao", versao=d["solicitacao"]["versao"]).get_json()
@@ -69,20 +68,16 @@ def test_fluxo_completo_ate_conclusao(clientes, usuarios):
     d, pid = r.get_json(), r.get_json()["pedido_criado"]
     assert d["solicitacao"]["status"] == "em_pedido"
     p = recebimento.get(f"/api/v1/pedidos/{pid}").get_json()  # o solicitante acompanha o pedido
-    assert p["pedido"]["status"] == "aguardando_financeiro" and p["pedido"]["codigo"].startswith("PC-")
+    assert p["pedido"]["status"] == "aprovado" and p["pedido"]["codigo"].startswith("PC-")
     assert Decimal(str(p["pedido"]["valor_total"])) == Decimal("13240.00") and len(p["itens"]) == 2
     assert p["acoes"] == []
 
-    assert acao_pedido(comprador, pid, "aprovar", versao=p["pedido"]["versao"]).status_code == 403
-    r = acao_pedido(financeiro, pid, "aprovar", versao=p["pedido"]["versao"], texto="Dotação confirmada.")
-    assert r.status_code == 200, r.get_json()
-    p = r.get_json()
-    assert p["pedido"]["status"] == "aprovado"
+    assert acao_pedido(comprador, pid, "aprovar", versao=p["pedido"]["versao"]).status_code == 404  # não há aprovação do pedido
     p = acao_pedido(comprador, pid, "enviar", versao=p["pedido"]["versao"]).get_json()
     assert p["pedido"]["status"] == "enviado" and p["pedido"]["data_prevista_entrega"]
 
     # Somente quem abriu a solicitação confirma o recebimento (nem outro setor, nem o gestor, nem Compras)
-    for nome in ("solicitante_lab", "gestor", "comprador", "financeiro", "admin"):
+    for nome in ("solicitante_lab", "gestor", "comprador", "admin"):
         r = clientes[nome].post(f"/api/v1/pedidos/{pid}/recebimentos", json={
             "itens": [{"pedido_item_id": p["itens"][0]["id"], "quantidade_recebida": "1", "quantidade_aceita": "1"}]})
         assert r.status_code in (403, 404), (nome, r.status_code)
@@ -115,9 +110,9 @@ def test_fluxo_completo_ate_conclusao(clientes, usuarios):
     d = solicitante.get(f"/api/v1/solicitacoes/{sid}").get_json()
     assert d["solicitacao"]["status"] == "concluida" and d["acoes"] == []
     acoes = [a["acao"] for a in d["assinaturas"]]
-    assert acoes == ["submissao", "aprovacao_gestor", "definicao_fornecedor", "emissao_pedido", "aprovacao_financeiro",
+    assert acoes == ["submissao", "aprovacao_gestor", "definicao_fornecedor", "emissao_pedido",
                      "envio_pedido", "recebimento", "recebimento"]
-    assert [a["nivel"] for a in d["aprovacoes"]] == ["gestor", "financeiro"]
+    assert [a["nivel"] for a in d["aprovacoes"]] == ["gestor"]
     for a in d["assinaturas"]:
         v = solicitante.get(f"/api/v1/assinaturas/{a['id']}/verificar").get_json()
         assert v["registro_integro"] is True
@@ -132,23 +127,22 @@ def test_fluxo_completo_ate_conclusao(clientes, usuarios):
     assert r.status_code == 200 and r.data.startswith(b"%PDF")
 
 
-def test_alcada_da_diretoria_e_segregacao_de_funcoes(clientes, usuarios):
-    gestor, diretoria = clientes["gestor"], clientes["diretoria"]
+def test_somente_o_gestor_aprova_inclusive_a_propria_solicitacao(clientes, usuarios):
+    gestor = clientes["gestor"]
     itens_caros = [{"descricao": "Ventilador pulmonar", "unidade": "UN", "quantidade": "1",
                     "valor_unitario_estimado": "48000"}]
     d = criar_solicitacao(clientes["solicitante"], com_anexo=False, itens=itens_caros)
     sid = d["solicitacao"]["id"]
     d = acao(gestor, sid, "aprovar", versao=d["solicitacao"]["versao"]).get_json()
-    assert d["solicitacao"]["status"] == "aguardando_diretoria"  # acima da alçada (R$ 25.000)
-    assert acao(gestor, sid, "aprovar", versao=d["solicitacao"]["versao"]).status_code == 422
-    d = acao(diretoria, sid, "aprovar", versao=d["solicitacao"]["versao"], texto="Previsto no plano anual.").get_json()
-    assert d["solicitacao"]["status"] == "aprovada"
-    assert [a["nivel"] for a in d["aprovacoes"]] == ["gestor", "diretoria"]
+    assert d["solicitacao"]["status"] == "aprovada"  # sem alçada: o gestor decide qualquer valor
+    assert [a["nivel"] for a in d["aprovacoes"]] == ["gestor"]
 
-    # Aberta pelo próprio gestor: vai direto à Diretoria (sem autoaprovação)
+    # Aberta pelo próprio gestor: ele mesmo aprova
     d = criar_solicitacao(gestor, com_anexo=False)
-    assert d["solicitacao"]["status"] == "aguardando_diretoria" and d["solicitacao"]["aberta_por_gestor"] is True
-    assert "aprovar" not in d["acoes"]
+    assert d["solicitacao"]["status"] == "aguardando_gestor" and d["solicitacao"]["aberta_por_gestor"] is True
+    assert "aprovar" in d["acoes"]
+    d = acao(gestor, d["solicitacao"]["id"], "aprovar", versao=d["solicitacao"]["versao"]).get_json()
+    assert d["solicitacao"]["status"] == "aprovada"
 
     # Gestor de outro setor não enxerga nem aprova
     d = criar_solicitacao(clientes["solicitante"], com_anexo=False)
@@ -185,13 +179,12 @@ def test_devolucao_ajuste_e_reenvio(clientes):
     assert acao(gestor, sid, "aprovar", versao=d["solicitacao"]["versao"]).status_code == 200
 
 
-def test_escolha_sem_minimo_exige_justificativa_e_pedido_acima_da_alcada(clientes):
-    comprador, financeiro, diretoria = clientes["comprador"], clientes["financeiro"], clientes["diretoria"]
+def test_escolha_sem_minimo_exige_justificativa_e_pedido_ja_nasce_aprovado(clientes):
+    comprador = clientes["comprador"]
     d = ate_aprovada(clientes)
     sid = d["solicitacao"]["id"]
     d = acao(comprador, sid, "iniciar_cotacao", versao=d["solicitacao"]["versao"]).get_json()
     f1 = fornecedor(comprador, "11.222.333/0001-81", "MEDTEC EQUIPAMENTOS HOSPITALARES LTDA")
-    # Preço de mercado acima do estimado: pedido ultrapassa a alçada sem ter passado pela Diretoria
     d = proposta(comprador, sid, f1, d["itens"], ["13000", "300"]).get_json()
     cot = d["cotacoes"][0]
     assert d["comparacao"]["abaixo_do_minimo"] is True
@@ -201,30 +194,9 @@ def test_escolha_sem_minimo_exige_justificativa_e_pedido_acima_da_alcada(cliente
              texto="Fornecedor exclusivo do modelo homologado pela engenharia clínica.").get_json()
     assert d["solicitacao"]["status"] == "aguardando_pedido"
     d = acao(comprador, sid, "emitir_pedido", versao=d["solicitacao"]["versao"]).get_json()
-    pid = d["pedido_criado"]
-    p = financeiro.get(f"/api/v1/pedidos/{pid}").get_json()
-    assert p["pedido"]["exige_diretoria"] is True
-    p = acao_pedido(financeiro, pid, "aprovar", versao=p["pedido"]["versao"]).get_json()
-    assert p["pedido"]["status"] == "aguardando_diretoria"
-    assert acao_pedido(financeiro, pid, "aprovar", versao=p["pedido"]["versao"]).status_code in (403, 422)
-    p = acao_pedido(diretoria, pid, "aprovar", versao=p["pedido"]["versao"]).get_json()
-    assert p["pedido"]["status"] == "aprovado"
-    assert [a["nivel"] for a in p["aprovacoes"]] == ["financeiro", "diretoria"]
-
-
-def test_reprovacao_financeira_reabre_a_cotacao(clientes):
-    d, pid = ate_pedido(clientes)
-    sid = d["solicitacao"]["id"]
-    financeiro, comprador = clientes["financeiro"], clientes["comprador"]
-    p = financeiro.get(f"/api/v1/pedidos/{pid}").get_json()
-    assert acao_pedido(financeiro, pid, "reprovar", versao=p["pedido"]["versao"], texto="curto").status_code == 422
-    p = acao_pedido(financeiro, pid, "reprovar", versao=p["pedido"]["versao"],
-                    texto="Sem dotação orçamentária neste mês; renegociar prazo de pagamento.").get_json()
-    assert p["pedido"]["status"] == "reprovado"
-    d = comprador.get(f"/api/v1/solicitacoes/{sid}").get_json()
-    assert d["solicitacao"]["status"] == "em_cotacao" and d["solicitacao"]["cotacao_vencedora_id"] is None
-    assert not any(c["selecionada"] for c in d["cotacoes"])
-    assert "definir_fornecedor" in d["acoes"]
+    p = comprador.get(f"/api/v1/pedidos/{d['pedido_criado']}").get_json()
+    assert p["pedido"]["status"] == "aprovado" and p["pedido"]["exige_diretoria"] is False
+    assert "enviar" in p["acoes"]
 
 
 def test_cancelamentos_e_permissoes(clientes):
@@ -246,7 +218,7 @@ def test_cancelamentos_e_permissoes(clientes):
     assert comprador.get(f"/api/v1/solicitacoes/{d['solicitacao']['id']}").get_json()["solicitacao"]["status"] == "em_cotacao"
 
     # Criação é exclusiva de solicitantes e gestores
-    for nome in ("comprador", "financeiro", "diretoria", "auditoria", "admin"):
+    for nome in ("comprador", "auditoria", "admin"):
         r = clientes[nome].post("/api/v1/solicitacoes", json={"tipo": "material", "titulo": "Teste de permissão",
                                                               "justificativa": "Justificativa longa o bastante.",
                                                               "itens": [{"descricao": "Item", "unidade": "UN", "quantidade": 1}]})
@@ -258,7 +230,7 @@ def test_isolamento_rls_por_perfil_e_sql_direto(clientes, usuarios, url_banco):
     sid = d["solicitacao"]["id"]
     assert clientes["solicitante_lab"].get(f"/api/v1/solicitacoes/{sid}").status_code == 404
     assert clientes["gestor_lab"].get(f"/api/v1/solicitacoes/{sid}").status_code == 404
-    for nome in ("admin", "financeiro", "diretoria", "auditoria", "gestor"):
+    for nome in ("admin", "auditoria", "gestor"):
         assert clientes[nome].get(f"/api/v1/solicitacoes/{sid}").status_code == 200, nome
     assert clientes["auditoria"].get("/api/v1/auditoria").status_code == 200
     assert clientes["comprador"].get("/api/v1/auditoria").status_code == 403
@@ -299,8 +271,8 @@ def test_valores_nao_podem_ser_forjados(clientes, usuarios, url_banco):
         como(usuarios["comprador"], "update rg.pedidos set valor_total = 1 where id = %s", (pid,))
     with pytest.raises(psycopg.errors.InsufficientPrivilege):
         como(usuarios["comprador"], "update rg.pedido_itens set valor_unitario = 1 where pedido_id = %s", (pid,))
-    with pytest.raises(psycopg.Error, match="Financeiro"):
-        como(usuarios["comprador"], "update rg.pedidos set status = 'aprovado' where id = %s", (pid,))
+    with pytest.raises(psycopg.Error, match="assinatura"):  # mudar o status sem a assinatura do usuário
+        como(usuarios["comprador"], "update rg.pedidos set status = 'enviado' where id = %s", (pid,))
 
 
 def test_limites_de_documentos_e_tipos(clientes):
@@ -383,7 +355,7 @@ def test_seguranca_cabecalhos_e_frontend(app):
     assert "connect-src 'self'" in r.headers["Content-Security-Policy"]  # nenhum serviço externo
     assert r.headers["X-Frame-Options"] == "DENY" and r.headers["Cache-Control"] == "no-store"
     meta = r.get_json()
-    assert len(meta["rotulos"]["papel"]) == 7
+    assert len(meta["rotulos"]["papel"]) == 5
     assert meta["etapas"][0] == "Solicitação" and meta["etapas"][-1] == "Conclusão"
     assert c.get("/solicitacoes/qualquer").status_code == 200
     assert c.get("/api/v1/inexistente").status_code == 404

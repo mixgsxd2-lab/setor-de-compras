@@ -120,9 +120,9 @@ export function badgeUsuario(status) {
 
 export const ICONE_PAPEL = {
   admin: "engrenagem", comprador: "carrinho", solicitante: "documento", gestor: "usuario_check",
-  financeiro: "carteira", diretoria: "maleta", auditoria: "auditoria",
+  auditoria: "auditoria",
 };
-const TOM_PAPEL = { admin: "", comprador: "primaria", solicitante: "info", gestor: "info", financeiro: "sucesso", diretoria: "violeta", auditoria: "alerta" };
+const TOM_PAPEL = { admin: "", comprador: "primaria", solicitante: "info", gestor: "info", auditoria: "alerta" };
 export function badgePapel(papel) {
   return html`<span class="badge ${TOM_PAPEL[papel] || ""}">${icone(ICONE_PAPEL[papel] || "perfil")}${rotulo("papel", papel)}</span>`;
 }

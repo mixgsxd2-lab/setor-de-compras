@@ -10,7 +10,6 @@ import { ativarUpload, zonaUpload } from "../ui/upload.js";
 const TIPOS = [
   ["material", "Materiais e insumos", "caixa", "Descartáveis, medicamentos, reagentes, papelaria"],
   ["equipamento", "Equipamentos", "monitor", "Equipamentos médicos, mobiliário, informática"],
-  ["servico", "Serviços", "ferramenta", "Manutenção, calibração, serviços técnicos"],
 ];
 
 function linhaItem(item = {}, i = 0) {
@@ -36,14 +35,13 @@ export async function montar({ raiz, params }) {
     renderizar(raiz, aviso("alerta", "Esta solicitação não pode ser ajustada", "Somente solicitações devolvidas para ajustes podem ser editadas pelo setor."));
     return;
   }
-  const alcada = parametros.alcada_diretoria;
   const slaDias = estado.meta.sla_dias;
   const u = estado.usuario;
 
   renderizar(raiz, html`
     ${cabecalho({
       titulo: edicao ? `Ajustar ${s.codigo}` : "Nova solicitação de compra",
-      sub: edicao ? "Faça os ajustes pedidos e reenvie para aprovação." : html`Setor <strong>${u.setor_nome}</strong> · ${u.papel === "gestor" ? "aberta por gestor: segue direto para a Diretoria" : "será analisada pelo gestor do setor"}`,
+      sub: edicao ? "Faça os ajustes pedidos e reenvie para aprovação." : html`Setor <strong>${u.setor_nome}</strong> · será analisada pelo gestor do setor`,
       migalhas: [{ rotulo: "Solicitações", href: "/solicitacoes" }, ...(edicao ? [{ rotulo: s.codigo, href: `/solicitacoes/${s.id}` }] : []), { rotulo: edicao ? "Ajustar" : "Nova" }],
     })}
     ${edicao && s.motivo_devolucao ? html`<div class="pilha">${aviso("alerta", "O que precisa ser ajustado", s.motivo_devolucao)}</div>` : ""}
@@ -96,7 +94,6 @@ export async function montar({ raiz, params }) {
           <div class="cartao-corpo pilha">
             <dl class="pares lista"><div><dt>Itens</dt><dd data-qtd-itens>0</dd></div><div><dt>Setor</dt><dd>${u.setor_nome}</dd></div><div><dt>Prazo de atendimento</dt><dd data-prazo>${slaDias[s.urgencia]} dias</dd></div></dl>
             <div class="resumo-total"><span class="texto-3">Total estimado</span><span class="valor-total" data-total-geral>R$ 0,00</span></div>
-            <div data-alcada></div>
             <div><p class="grupo-titulo-secao">Caminho de aprovação</p><ol class="linha-tempo" data-caminho></ol></div>
           </div>
           <div class="cartao-rodape"><a class="botao secundario" href="${edicao ? `/solicitacoes/${s.id}` : "/solicitacoes"}">Cancelar</a>
@@ -132,14 +129,9 @@ export async function montar({ raiz, params }) {
     const validos = itens.filter((i) => i.descricao && i.quantidade > 0).length;
     raiz.querySelector("[data-qtd-itens]").textContent = validos;
     raiz.querySelector("[data-total-geral]").textContent = formato.moeda(total);
-    const exigeDiretoria = u.papel === "gestor" || total >= alcada;
-    renderizar(raiz.querySelector("[data-alcada]"), total >= alcada
-      ? aviso("info", "Acima da alçada de " + formato.moeda(alcada), "Após o gestor, a Diretoria também aprovará esta solicitação.")
-      : "");
     const passos = [
       ...(u.papel === "gestor" ? [] : [["Gestor do setor", "usuario_check"]]),
-      ...(exigeDiretoria ? [["Diretoria", "maleta"]] : []),
-      ["Compras: cotação e pedido", "carrinho"], ["Financeiro aprova o pedido", "carteira"], ["Recebimento e conferência", "caminhao"],
+      ["Compras: cotação e pedido", "carrinho"], ["Você confirma o recebimento", "caminhao"],
     ];
     renderizar(raiz.querySelector("[data-caminho]"), html`${passos.map(([r, ic]) => html`<li><span class="icone-t">${icone(ic)}</span><span class="t-titulo pequeno">${r}</span></li>`)}`);
     corpoItens.querySelectorAll("[data-remover]").forEach((b) => { b.disabled = itens.length === 1; });
@@ -244,7 +236,7 @@ export async function montar({ raiz, params }) {
         toast("sucesso", "Solicitação reenviada", `${r.solicitacao.codigo} voltou para aprovação.`);
       } else {
         r = await comCarregamento(botao, api.enviarFormulario("/solicitacoes", fd));
-        toast("sucesso", "Solicitação enviada e assinada", `${r.solicitacao.codigo} · ${r.solicitacao.status === "aguardando_diretoria" ? "aguardando a Diretoria" : "aguardando o gestor do setor"}`);
+        toast("sucesso", "Solicitação enviada e assinada", `${r.solicitacao.codigo} · aguardando o gestor do setor`);
       }
       navegar(`/solicitacoes/${r.solicitacao.id}`);
     } catch (erro) {

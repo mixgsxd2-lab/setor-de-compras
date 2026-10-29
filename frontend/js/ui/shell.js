@@ -7,7 +7,7 @@ import { icone } from "./icones.js";
 import { formato, modal, toast, badgeStatus, badgePedido, pode } from "./componentes.js";
 import { aplicarTema, temaAtual } from "../tema.js";
 
-const COM_FILA = ["comprador", "solicitante", "gestor", "financeiro", "diretoria"];
+const COM_FILA = ["comprador", "solicitante", "gestor"];
 
 const MENU = [
   { grupo: "Visão geral" },
@@ -17,8 +17,8 @@ const MENU = [
   { grupo: "Fluxo de compras" },
   { href: "/solicitacoes", rotulo: "Solicitações", icone: "documento" },
   { href: "/solicitacoes/nova", rotulo: "Nova solicitação", icone: "mais", capacidade: "solicitacao.criar" },
-  { href: "/aprovacoes", rotulo: "Aprovações", icone: "carimbo", contador: "aprovacoes", se: (p) => ["gestor", "diretoria", "financeiro", "admin", "auditoria"].includes(p) },
-  { href: "/cotacoes", rotulo: "Cotações", icone: "balanca", contador: "cotacoes", se: (p) => ["comprador", "admin", "auditoria", "diretoria"].includes(p) },
+  { href: "/aprovacoes", rotulo: "Aprovações", icone: "carimbo", contador: "aprovacoes", se: (p) => ["gestor", "admin", "auditoria"].includes(p) },
+  { href: "/cotacoes", rotulo: "Cotações", icone: "balanca", contador: "cotacoes", se: (p) => ["comprador", "admin", "auditoria"].includes(p) },
   { href: "/pedidos", rotulo: "Pedidos de compra", icone: "pedido", capacidade: "pedido.ver", contador: "pedidos" },
   { href: "/recebimentos", rotulo: "Recebimentos", icone: "caminhao", capacidade: "recebimento.ver", contador: "recebimentos" },
   { grupo: "Cadastros" },

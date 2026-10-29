@@ -103,22 +103,18 @@ def criar(cur, usuario: dict, dados: dict, itens: list[dict], arquivos: list[Arq
 
 def decidir_aprovacao(cur, usuario: dict, sid: str, decisao: str, texto: str | None, versao: int | None,
                       ip: str, user_agent: str) -> None:
-    """Gestor (nível 1) ou Diretoria (nível 2): aprovar, devolver ou reprovar."""
-    status_esperado = {"gestor": "aguardando_gestor", "diretoria": "aguardando_diretoria"}.get(usuario["papel"])
-    if not status_esperado:
+    """Gestor do setor: aprovar, devolver ou reprovar."""
+    if usuario["papel"] != "gestor":
         raise Proibido("Seu perfil não aprova solicitações")
-    atual = _obter(cur, sid, status_esperado)
+    atual = _obter(cur, sid, "aguardando_gestor")
     _conferir_versao(atual, versao)
-    if usuario["papel"] == "gestor":
-        if atual["setor_codigo"] != usuario["setor_codigo"]:
-            raise Proibido("Você só aprova solicitações do seu setor")
-        if atual["solicitante_id"] == usuario["id"]:
-            raise ApiError("Segregação de funções: você não pode aprovar a própria solicitação", 422, "segregacao")
+    if atual["setor_codigo"] != usuario["setor_codigo"]:
+        raise Proibido("Você só aprova solicitações do seu setor")
     texto = (texto or "").strip() or None
     if decisao == "aprovar":
         definir_observacao(cur, texto or "Aprovada")
         cur.execute("update rg.solicitacoes set status = 'aprovada' where id = %s", (sid,))
-        acao = "aprovacao_gestor" if usuario["papel"] == "gestor" else "aprovacao_diretoria"
+        acao = "aprovacao_gestor"
     elif decisao == "devolver":
         texto = exigir_texto(texto)
         definir_observacao(cur, texto)
@@ -160,7 +156,7 @@ def reenviar(cur, usuario: dict, sid: str, dados: dict, itens: list[dict] | None
 
 
 def cancelar(cur, usuario: dict, sid: str, motivo: str | None, versao: int | None, ip: str, user_agent: str) -> None:
-    atual = _obter(cur, sid, "aguardando_gestor", "aguardando_diretoria", "devolvida", "aprovada", "em_cotacao",
+    atual = _obter(cur, sid, "aguardando_gestor", "devolvida", "aprovada", "em_cotacao",
                    "aguardando_pedido")
     _conferir_versao(atual, versao)
     motivo = exigir_texto(motivo, "texto")
@@ -289,32 +285,6 @@ def _obter_pedido(cur, pedido_id: str, *permitidos: str, bloquear: bool = True) 
     return bloqueado
 
 
-def decidir_pedido(cur, usuario: dict, pedido_id: str, decisao: str, texto: str | None, versao: int | None,
-                   ip: str, user_agent: str) -> None:
-    papel = usuario["papel"]
-    status_esperado = {"financeiro": "aguardando_financeiro", "diretoria": "aguardando_diretoria"}.get(papel)
-    if not status_esperado:
-        raise Proibido("Seu perfil não aprova pedidos de compra")
-    p = _obter_pedido(cur, pedido_id, status_esperado)
-    _conferir_versao(p, versao)
-    texto = (texto or "").strip() or None
-    coluna_parecer = "parecer_financeiro" if papel == "financeiro" else "parecer_diretoria"
-    if decisao == "aprovar":
-        definir_observacao(cur, texto or "Pedido aprovado")
-        cur.execute(f"update rg.pedidos set status = 'aprovado', {coluna_parecer} = %s where id = %s", (texto, pedido_id))
-        acao = "aprovacao_financeiro" if papel == "financeiro" else "aprovacao_diretoria_pedido"
-    elif decisao == "reprovar":
-        texto = exigir_texto(texto)
-        definir_observacao(cur, texto)
-        cur.execute(f"update rg.pedidos set status = 'reprovado', motivo_reprovacao = %s, {coluna_parecer} = %s"
-                    " where id = %s", (texto, texto, pedido_id))
-        acao = "reprovacao_financeiro" if papel == "financeiro" else "reprovacao_diretoria_pedido"
-    else:
-        raise ApiError("Decisão inválida", 422, "decisao_invalida")
-    assinaturas.assinar(cur, solicitacao_id=str(p["solicitacao_id"]), usuario=usuario, acao=acao, ip=ip,
-                        user_agent=user_agent, pedido_id=pedido_id)
-
-
 def enviar_pedido(cur, usuario: dict, pedido_id: str, data_prevista, versao: int | None, ip: str, user_agent: str) -> None:
     p = _obter_pedido(cur, pedido_id, "aprovado")
     _conferir_versao(p, versao)
@@ -327,7 +297,7 @@ def enviar_pedido(cur, usuario: dict, pedido_id: str, data_prevista, versao: int
 
 def cancelar_pedido(cur, usuario: dict, pedido_id: str, motivo: str | None, versao: int | None,
                     ip: str, user_agent: str) -> None:
-    p = _obter_pedido(cur, pedido_id, "aguardando_financeiro", "aguardando_diretoria", "aprovado", "enviado")
+    p = _obter_pedido(cur, pedido_id, "aprovado", "enviado")
     _conferir_versao(p, versao)
     motivo = exigir_texto(motivo)
     definir_observacao(cur, motivo)
@@ -459,28 +429,26 @@ def carregar_detalhe(cur, solicitacao_id: str) -> dict:
                      from rg.solicitacao_historico h left join rg.v_usuarios_publico u on u.id = h.autor_id
                     where h.solicitacao_id = %s order by h.criado_em, h.id""", (solicitacao_id,))
     historico = cur.fetchall()
-    cur.execute("select rg.config_num('minimo_cotacoes') as m, rg.config_num('alcada_diretoria') as a")
+    cur.execute("select rg.config_num('minimo_cotacoes') as m")
     cfg = cur.fetchone()
     return {"solicitacao": s, "itens": itens, "anexos": anexos, "cotacoes": cotacoes,
             "comparacao": comparar_propostas(itens, cotacoes, int(cfg["m"] or 1)),
             "pedidos": pedidos, "recebimentos": recebimentos, "aprovacoes": aprovacoes,
-            "assinaturas": assinaturas_, "historico": historico, "alcada_diretoria": cfg["a"]}
+            "assinaturas": assinaturas_, "historico": historico}
 
 
 def acoes_disponiveis(usuario: dict, s: dict) -> list[str]:
     papel, status = usuario["papel"], s["status"]
     do_setor = papel in ("solicitante", "gestor") and s["setor_codigo"] == usuario["setor_codigo"]
     acoes: list[str] = []
-    if papel == "gestor" and status == "aguardando_gestor" and do_setor and str(s["solicitante_id"]) != usuario["id"]:
-        acoes += ["aprovar", "devolver", "reprovar"]
-    if papel == "diretoria" and status == "aguardando_diretoria":
+    if papel == "gestor" and status == "aguardando_gestor" and do_setor:
         acoes += ["aprovar", "devolver", "reprovar"]
     if do_setor and status == "devolvida" and (papel == "solicitante" or s["aberta_por_gestor"]):
         acoes.append("reenviar")
-    if do_setor and status in ("aguardando_gestor", "aguardando_diretoria", "devolvida"):
+    if do_setor and status in ("aguardando_gestor", "devolvida"):
         acoes.append("anexar")
-    if (do_setor and status in ("aguardando_gestor", "aguardando_diretoria", "devolvida")) or (
-            papel == "admin" and status in ("aguardando_gestor", "aguardando_diretoria", "devolvida", "aprovada",
+    if (do_setor and status in ("aguardando_gestor", "devolvida")) or (
+            papel == "admin" and status in ("aguardando_gestor", "devolvida", "aprovada",
                                             "em_cotacao", "aguardando_pedido")):
         acoes.append("cancelar")
     if papel == "comprador":
@@ -498,10 +466,6 @@ def acoes_disponiveis(usuario: dict, s: dict) -> list[str]:
 def acoes_pedido(usuario: dict, p: dict) -> list[str]:
     papel, status = usuario["papel"], p["status"]
     acoes: list[str] = []
-    if papel == "financeiro" and status == "aguardando_financeiro":
-        acoes += ["aprovar", "reprovar"]
-    if papel == "diretoria" and status == "aguardando_diretoria":
-        acoes += ["aprovar", "reprovar"]
     if papel == "comprador":
         if status == "aprovado":
             acoes.append("enviar")
@@ -509,7 +473,7 @@ def acoes_pedido(usuario: dict, p: dict) -> list[str]:
             acoes.append("atualizar_previsao")
         if status == "entregue_parcial":
             acoes.append("encerrar")
-    if papel in ("comprador", "admin") and status in ("aguardando_financeiro", "aguardando_diretoria", "aprovado") or (
+    if papel in ("comprador", "admin") and status == "aprovado" or (
             papel in ("comprador", "admin") and status == "enviado" and not p.get("percentual_recebido")):
         acoes.append("cancelar")
     if papel in ("solicitante", "gestor") and status in ("enviado", "entregue_parcial") \

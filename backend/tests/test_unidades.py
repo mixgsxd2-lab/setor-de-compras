@@ -60,7 +60,6 @@ def test_comparacao_de_propostas():
 def test_matriz_de_permissoes_segrega_funcoes():
     assert permissoes.pode({"papel": "gestor"}, "solicitacao.aprovar_gestor")
     assert not permissoes.pode({"papel": "admin"}, "solicitacao.aprovar_gestor")  # administrador não aprova compras
-    assert not permissoes.pode({"papel": "comprador"}, "pedido.aprovar_financeiro")
     assert not permissoes.pode({"papel": "auditoria"}, "solicitacao.criar")
     escrita = [c for c in permissoes.CAPACIDADES if not c.endswith(".ver")]
     assert not any(permissoes.pode({"papel": "auditoria"}, c) for c in escrita)

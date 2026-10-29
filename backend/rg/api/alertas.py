@@ -53,29 +53,15 @@ def calcular(cur, usuario: dict) -> list[dict]:
     cur.execute("""select id, codigo, titulo, status, atualizado_em, setor_nome, setor_cor,
                           extract(day from now() - atualizado_em)::int as dias
                      from rg.v_solicitacoes
-                    where status in ('aguardando_gestor', 'aguardando_diretoria') and atualizado_em < now() - interval '3 days'
+                    where status = 'aguardando_gestor' and atualizado_em < now() - interval '3 days'
                     order by atualizado_em limit 40""")
     for s in cur.fetchall():
         if papel == "gestor" and s["status"] != "aguardando_gestor":
             continue
-        if papel not in ("gestor", "diretoria", "admin", "solicitante", "auditoria"):
+        if papel not in ("gestor", "admin", "solicitante", "auditoria"):
             continue
         add("aprovacao", "alerta", f"Aguardando aprovação há {s['dias']} dias", f"{s['codigo']} · {s['titulo']}",
             f"/solicitacoes/{s['id']}", s["atualizado_em"], s["setor_nome"], s["setor_cor"], s["codigo"])
-
-    if papel in ("financeiro", "diretoria", "admin", "comprador", "auditoria"):
-        cur.execute("""select id, codigo, status, criado_em, valor_total, setor_nome, setor_cor,
-                              extract(day from now() - atualizado_em)::int as dias
-                         from rg.v_pedidos
-                        where status in ('aguardando_financeiro', 'aguardando_diretoria')
-                          and atualizado_em < now() - interval '2 days' order by atualizado_em limit 30""")
-        for p in cur.fetchall():
-            if papel == "diretoria" and p["status"] != "aguardando_diretoria":
-                continue
-            if papel == "financeiro" and p["status"] != "aguardando_financeiro":
-                continue
-            add("aprovacao", "alerta", f"Pedido aguardando aprovação há {p['dias']} dias", p["codigo"],
-                f"/pedidos/{p['id']}", p["criado_em"], p["setor_nome"], p["setor_cor"], p["codigo"])
 
     # Propostas vencidas ou vencendo em cotações abertas
     if papel in ("comprador", "admin"):
@@ -93,7 +79,7 @@ def calcular(cur, usuario: dict) -> list[dict]:
                 c["validade_proposta"], c["setor_nome"], c["setor_cor"], c["codigo"])
 
     # Recebimentos com divergência (últimos 30 dias)
-    if papel in ("comprador", "solicitante", "gestor", "admin", "financeiro", "auditoria", "diretoria"):
+    if papel in ("comprador", "solicitante", "gestor", "admin", "auditoria"):
         cur.execute("""select pedido_id, codigo, pedido_codigo, situacao, recebido_em, nota_fiscal, fornecedor_nome,
                               fornecedor_fantasia, setor_nome, setor_cor
                          from rg.v_recebimentos where situacao <> 'conforme' and recebido_em > now() - interval '30 days'

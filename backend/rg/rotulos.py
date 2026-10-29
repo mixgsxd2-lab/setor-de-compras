@@ -5,21 +5,17 @@ PAPEL = {
     "comprador": "Comprador",
     "solicitante": "Solicitante",
     "gestor": "Gestor de setor",
-    "financeiro": "Financeiro",
-    "diretoria": "Diretoria",
-    "auditoria": "Auditoria",
+    "auditoria": "Visão geral",
 }
 PAPEL_DESCRICAO = {
     "admin": "Administra usuários, setores, catálogo, fornecedores e parâmetros. Visão completa, sem aprovar compras.",
     "comprador": "Conduz cotações, registra propostas, define o fornecedor e emite e envia pedidos de compra.",
     "solicitante": "Abre solicitações de compra do seu setor, acompanha cada etapa e confirma o recebimento.",
-    "gestor": "Aprova, devolve ou reprova as solicitações do seu setor.",
-    "financeiro": "Aprova os pedidos de compra sob a ótica orçamentária e acompanha os gastos.",
-    "diretoria": "Aprova solicitações e pedidos acima da alçada e acompanha os indicadores.",
-    "auditoria": "Acesso somente leitura a todos os registros, histórico e trilha de auditoria.",
+    "gestor": "Aprova, devolve ou reprova as solicitações do seu setor e confirma o recebimento das que abriu.",
+    "auditoria": "Acompanha tudo em modo somente leitura: solicitações, pedidos, indicadores, histórico e trilha de auditoria.",
 }
 STATUS_USUARIO = {"pendente": "Pendente", "aprovado": "Ativo", "rejeitado": "Rejeitado", "suspenso": "Suspenso"}
-TIPO_SOLICITACAO = {"material": "Materiais e insumos", "equipamento": "Equipamentos", "servico": "Serviços"}
+TIPO_SOLICITACAO = {"material": "Materiais e insumos", "equipamento": "Equipamentos"}
 URGENCIA = {"normal": "Normal", "urgente": "Urgente", "imediato": "Imediata"}
 SLA_DIAS = {"imediato": 3, "urgente": 7, "normal": 14}
 STATUS_SOLICITACAO = {

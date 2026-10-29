@@ -40,7 +40,7 @@ def painel(cur, inicio: date, fim: date, setor: str | None, tz: str) -> dict:
 
     cur.execute(f"""
         select count(*) filter (where v.status not in {TERMINAIS}) as abertas,
-               count(*) filter (where v.status in ('aguardando_gestor', 'aguardando_diretoria', 'devolvida')) as em_aprovacao,
+               count(*) filter (where v.status in ('aguardando_gestor', 'devolvida')) as em_aprovacao,
                count(*) filter (where v.status in ('aprovada', 'em_cotacao', 'aguardando_pedido')) as em_compras,
                count(*) filter (where v.status in ('em_pedido', 'recebida_parcial')) as aguardando_entrega,
                count(*) filter (where v.sla_situacao = 'estourado') as sla_estourado,
@@ -79,7 +79,7 @@ def painel(cur, inicio: date, fim: date, setor: str | None, tz: str) -> dict:
          group by v.status""", p)
     abertas_status = {r["status"]: {"quantidade": r["quantidade"], "valor": _f(r["valor"])} for r in cur.fetchall()}
     etapas = [
-        ("aprovacao", "Aprovação", ("aguardando_gestor", "aguardando_diretoria", "devolvida")),
+        ("aprovacao", "Aprovação", ("aguardando_gestor", "devolvida")),
         ("cotacao", "Cotação", ("aprovada", "em_cotacao")),
         ("fornecedor", "Fornecedor", ("aguardando_pedido",)),
         ("pedido", "Pedido", ("em_pedido",)),

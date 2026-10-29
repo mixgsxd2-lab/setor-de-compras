@@ -13,16 +13,12 @@ CONTAS_TESTE = [
      "setor_codigo": "uti_adulto", "cargo": "Enfermeira Supervisora"},
     {"papel": "gestor", "nome": "Fernando Alves", "email": "gestor@hrg.demo",
      "setor_codigo": "uti_adulto", "cargo": "Coordenador Médico da UTI"},
-    {"papel": "financeiro", "nome": "Patrícia Lemos", "email": "financeiro@hrg.demo",
-     "setor_codigo": "financeiro", "cargo": "Analista Financeira"},
-    {"papel": "diretoria", "nome": "Helena Castro", "email": "diretoria@hrg.demo",
-     "setor_codigo": "diretoria", "cargo": "Diretora Administrativa"},
     {"papel": "auditoria", "nome": "Roberto Nunes", "email": "auditoria@hrg.demo",
      "setor_codigo": "controladoria", "cargo": "Auditor Interno"},
 ]
 
 # Perfis oferecidos no seletor da tela inicial (as demais contas existem, apenas não aparecem no seletor).
-PERFIS_EXPLORAR = {"solicitante", "gestor", "comprador", "financeiro"}
+PERFIS_EXPLORAR = {"solicitante", "gestor", "comprador", "auditoria"}
 
 
 def semear(cur, hash_senha: str, termo_versao: str) -> list[str]:

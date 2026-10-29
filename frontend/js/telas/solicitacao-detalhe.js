@@ -32,13 +32,12 @@ function movimentacao(h) {
 // ------------------------------------------------------------------ blocos
 function blocoDecisao(d) {
   const s = d.solicitacao;
-  const nivel = s.status === "aguardando_gestor" ? "Gestor do setor" : "Diretoria";
+  const nivel = "Gestor do setor";
   return html`<section class="cartao destaque" aria-labelledby="t-decisao">
     <div class="cartao-cabecalho"><h2 id="t-decisao">${icone("carimbo")}Sua decisão · ${nivel}</h2></div>
     <form class="cartao-corpo painel-decisao" id="form-decisao" novalidate>
       <dl class="pares lista"><div><dt>Valor estimado</dt><dd class="num"><strong>${formato.moeda(s.valor_estimado)}</strong></dd></div>
-        <div><dt>Alçada da Diretoria</dt><dd class="num">${formato.moeda(d.alcada_diretoria)}</dd></div></dl>
-      ${s.status === "aguardando_gestor" && Number(s.valor_estimado) >= Number(d.alcada_diretoria) ? aviso("info", "Após sua aprovação, segue para a Diretoria", "O valor estimado está acima da alçada.") : ""}
+</dl>
       <div class="campo"><label for="parecer">Parecer <span class="texto-3">(obrigatório para devolver ou reprovar)</span></label>
         <textarea id="parecer" name="texto" maxlength="2000" placeholder="Registre sua análise. Ao devolver, indique exatamente o que deve ser ajustado."></textarea></div>
       <div class="botoes-decisao">
@@ -430,7 +429,7 @@ export async function montar({ raiz, params, consulta }) {
       const v = d.cotacoes.find((c) => c.selecionada);
       const r = await confirmar({
         titulo: "Emitir pedido de compra", rotuloConfirmar: "Assinar e emitir pedido", icone: "assinatura",
-        mensagem: "Os itens e valores são copiados da proposta vencedora e não podem ser alterados. O pedido segue para aprovação do Financeiro.",
+        mensagem: "Os itens e valores são copiados da proposta vencedora e não podem ser alterados. O pedido já nasce aprovado e pode ser enviado ao fornecedor.",
         extra: html`<dl class="pares lista"><div><dt>Fornecedor</dt><dd>${v?.nome_fantasia || v?.razao_social}</dd></div><div><dt>Valor total</dt><dd><strong>${formato.moeda(v?.valor_total)}</strong></dd></div><div><dt>Prazo</dt><dd>${v?.prazo_entrega_dias} dias</dd></div></dl>
           <div class="form-grade"><div class="campo col-6"><label for="e-pag">Condições de pagamento</label><input id="e-pag" name="condicoes_pagamento" maxlength="300" value="${v?.condicoes_pagamento || ""}"></div>
           <div class="campo col-6"><label for="e-local">Local de entrega</label><input id="e-local" name="local_entrega" maxlength="160" value="${s.local_entrega || "Almoxarifado central"}"></div>

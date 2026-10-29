@@ -2,7 +2,7 @@
 // - Estáticos (shell, CSS, JS, marca): rede primeiro (revalidação por ETag) com cache de reserva offline.
 // - Navegação: rede primeiro; offline cai para o shell em cache (a SPA exibe o aviso de conexão).
 // - API (/api/*) e WebSocket: nunca armazenados em cache (dados pessoais e sensíveis — LGPD).
-const VERSAO = "rg-compras-v2.0.2";
+const VERSAO = "rg-compras-v2.0.3";
 const SHELL = [
   "/", "/index.html", "/offline.html", "/manifest.webmanifest", "/favicon.svg", "/favicon-48.png",
   "/css/base.css", "/css/componentes.css", "/assets/fontes/inter-latin.woff2", "/assets/fontes/inter-latin-ext.woff2",

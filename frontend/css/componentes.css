@@ -397,6 +397,7 @@ a.kpi:hover { border-color: var(--primaria-borda); box-shadow: var(--sombra-2); 
 
 /* ---------- Fluxo (stepper das 7 etapas) ---------- */
 .fluxo { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 0; padding: 18px 20px 16px; }
+.fluxo.tres { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .fluxo.quatro { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 .etapa { position: relative; display: grid; justify-items: center; gap: 7px; text-align: center; min-width: 0; }
 .etapa::before { content: ""; position: absolute; top: 14px; left: calc(-50% + 18px); right: calc(50% + 18px); height: 2px; background: var(--borda); border-radius: 2px; }
@@ -415,7 +416,7 @@ a.kpi:hover { border-color: var(--primaria-borda); box-shadow: var(--sombra-2); 
 .etapa.bloqueada .nome { color: var(--perigo); }
 .etapa.atencao .marcador { border-color: var(--alerta-forte); color: var(--alerta); background: var(--alerta-suave); }
 @media (max-width: 760px) {
-  .fluxo, .fluxo.quatro { grid-template-columns: 1fr; gap: 0; padding: 14px 16px; }
+  .fluxo, .fluxo.tres, .fluxo.quatro { grid-template-columns: 1fr; gap: 0; padding: 14px 16px; }
   .etapa { grid-template-columns: 30px 1fr; justify-items: start; text-align: left; column-gap: 12px; row-gap: 0; padding-bottom: 14px; }
   .etapa .marcador { grid-row: span 2; }
   .etapa::before { top: auto; bottom: -2px; left: 14px; right: auto; width: 2px; height: calc(100% - 30px); transform: translateY(0); }

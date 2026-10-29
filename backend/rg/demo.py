@@ -49,7 +49,6 @@ CATEGORIAS = [
     ("Tecnologia da informação", "#334155", "Equipamentos de informática e periféricos"),
     ("Manutenção predial", "#A16207", "Materiais elétricos, hidráulicos e de pintura"),
     ("EPIs e rouparia", "#DB2777", "Equipamentos de proteção individual e enxoval"),
-    ("Serviços técnicos", "#9333EA", "Manutenção, calibração e serviços especializados"),
 ]
 
 MATERIAIS = {
@@ -94,9 +93,6 @@ MATERIAIS = {
                            ("Válvula reguladora de oxigênio", "UN", "460.00")],
     "EPIs e rouparia": [("Avental descartável manga longa", "UN", "3.40"), ("Óculos de proteção incolor", "UN", "12.80"),
                         ("Lençol hospitalar 100% algodão", "UN", "38.00")],
-    "Serviços técnicos": [("Manutenção preventiva de equipamentos biomédicos", "SV", "4500.00"),
-                          ("Calibração de equipamentos biomédicos", "SV", "2800.00"),
-                          ("Controle integrado de pragas", "SV", "1900.00")],
 }
 
 FORNECEDORES = [
@@ -104,7 +100,7 @@ FORNECEDORES = [
      ["Medicamentos", "Materiais médico-hospitalares", "EPIs e rouparia"]),
     ("Farmavida Comércio de Medicamentos Ltda", "Farmavida", "Pelotas", "RS", "Gilberto Sena", ["Medicamentos"]),
     ("BioEquip Tecnologia Médica S.A.", "BioEquip", "São Paulo", "SP", "Mariana Toledo",
-     ["Equipamentos médicos", "Serviços técnicos"]),
+     ["Equipamentos médicos"]),
     ("Lagoa Produtos Hospitalares Ltda", "Lagoa Hospitalar", "Rio Grande", "RS", "Élton Brum",
      ["Materiais médico-hospitalares", "Medicamentos", "Higiene e limpeza"]),
 ]
@@ -120,7 +116,7 @@ SETOR_CATEGORIAS = {
     "hotelaria": ["Higiene e limpeza", "EPIs e rouparia"],
     "tecnologia": ["Tecnologia da informação"],
     "manutencao": ["Manutenção predial"],
-    "engenharia_clinica": ["Serviços técnicos", "Equipamentos médicos"],
+    "engenharia_clinica": ["Equipamentos médicos"],
     "administracao": ["Material de escritório", "Tecnologia da informação"],
 }
 
@@ -137,7 +133,6 @@ TITULOS = {
     "Tecnologia da informação": ["Renovação de estações de trabalho", "Equipamentos de informática"],
     "Manutenção predial": ["Materiais para manutenção predial", "Reforma e pintura de ambientes"],
     "EPIs e rouparia": ["Equipamentos de proteção individual", "Reposição de enxoval hospitalar"],
-    "Serviços técnicos": ["Contratação de {item}", "Serviço de {item}"],
 }
 
 JUSTIFICATIVAS = {
@@ -152,11 +147,6 @@ JUSTIFICATIVAS = {
         "Equipamento atual apresenta falhas recorrentes e custo de manutenção elevado, comprometendo a segurança do paciente.",
         "Atendimento a exigência de acreditação hospitalar e às normas vigentes da vigilância sanitária.",
         "Ampliação da capacidade de atendimento do setor prevista no planejamento anual.",
-    ],
-    "servico": [
-        "Manutenção preventiva prevista no plano anual, obrigatória para manter a certificação dos equipamentos.",
-        "Atendimento a exigência de acreditação hospitalar e às normas vigentes da vigilância sanitária.",
-        "Contrato anterior encerrado; o serviço é necessário para a continuidade da operação do setor.",
     ],
 }
 PAGAMENTOS = ["28 dias", "30 dias", "30/60 dias", "À vista com 3% de desconto", "45 dias", "30/60/90 dias"]
@@ -174,16 +164,15 @@ CENARIOS = [
     ("uti_adulto", "em_cotacao", "urgente", 4, None),
     ("uti_adulto", "enviado", "normal", 12, None),
     ("uti_adulto", "concluida", "normal", 35, None),
-    ("pronto_socorro", "ped_aguardando_diretoria", "urgente", 9, "caro"),
+    ("pronto_socorro", "ped_aprovado", "urgente", 9, "caro"),
     ("pronto_socorro", "aprovada", "imediato", 1, None),
     ("pronto_socorro", "concluida", "normal", 26, None),
-    ("farmacia", "ped_aguardando_financeiro", "urgente", 7, None),
+    ("farmacia", "ped_aprovado", "urgente", 7, None),
     ("farmacia", "aguardando_pedido", "urgente", 8, None),
 ]
 
-ORDEM = ["aguardando_gestor", "devolvida", "reprovada", "cancelada", "aguardando_diretoria", "aprovada", "em_cotacao",
-         "aguardando_pedido", "ped_aguardando_financeiro", "ped_aguardando_diretoria", "ped_aprovado", "enviado",
-         "entregue_parcial", "concluida"]
+ORDEM = ["aguardando_gestor", "devolvida", "reprovada", "cancelada", "aprovada", "em_cotacao",
+         "aguardando_pedido", "ped_aprovado", "enviado", "entregue_parcial", "concluida"]
 
 
 def _d(v) -> Decimal:
@@ -317,7 +306,7 @@ class Semeador:
         if marcador == "caro" and setor == "pronto_socorro":
             categoria = "Equipamentos médicos"
         materiais = self.materiais[categoria]
-        caro = categoria in ("Equipamentos médicos", "Tecnologia da informação", "Serviços técnicos")
+        caro = categoria in ("Equipamentos médicos", "Tecnologia da informação")
         qtd_itens = r.randint(1, 2) if caro else r.randint(2, 5)
         escolhidos = r.sample(materiais, min(qtd_itens, len(materiais)))
         itens = []
@@ -331,46 +320,30 @@ class Semeador:
                 qtd = Decimal(r.randint(1, 8) * base)
             estimado = _d(m["preco"] * Decimal(str(r.uniform(0.95, 1.18))))
             itens.append({"id": str(uuid.uuid4()), "ordem": ordem, "material": m, "quantidade": qtd, "estimado": estimado})
-        alcada = Decimal("25000")
         ajuste_proposta = 1.0
-        if final in ("aguardando_diretoria", "ped_aguardando_diretoria"):
-            m = max(materiais, key=lambda x: x["preco"])
-            alvo = 34000 if final == "aguardando_diretoria" else 21000
-            qtd = Decimal(max(1, -(-alvo // int(m["preco"])) if final == "aguardando_diretoria" else alvo // int(m["preco"])))
-            itens = [{"id": str(uuid.uuid4()), "ordem": 1, "material": m, "quantidade": qtd,
-                      "estimado": _d(m["preco"] * Decimal("0.97"))}]
-            if final == "ped_aguardando_diretoria":
-                ajuste_proposta = max(1.0, 25500 / (float(qtd * m["preco"]) * 0.84 * 0.9))
         valor_estimado = sum(_d(i["quantidade"] * i["estimado"]) for i in itens)
 
         solicitante = self.de("solicitante", setor) or self.de("gestor", setor)
         if marcador == "gestor":
             solicitante = self.de("gestor", setor)
         gestor = self.de("gestor", setor)
-        diretoria = self.de("diretoria")
         comprador = self.por_papel["comprador"][n % len(self.por_papel["comprador"])]
-        financeiro = self.de("financeiro")
         receb = solicitante  # quem abriu a solicitação confirma o recebimento
-        exige_dir = valor_estimado >= alcada
 
         # Linha do tempo relativa (horas desde a abertura)
         t = {"criacao": 0.0}
         t["gestor"] = r.uniform(3, 30)
-        t["diretoria"] = t["gestor"] + r.uniform(4, 36)
-        t["aprovada"] = t["diretoria"] if exige_dir else t["gestor"]
+        t["aprovada"] = t["gestor"]
         t["cotacao"] = t["aprovada"] + r.uniform(1, 20)
         t["fornecedor"] = t["cotacao"] + r.uniform(24, 96)
         t["pedido"] = t["fornecedor"] + r.uniform(2, 20)
-        t["financeiro"] = t["pedido"] + r.uniform(3, 30)
         prazo = r.choice([3, 5, 7, 10, 15]) if not caro else r.choice([10, 15, 20, 30])
-        t["ped_diretoria"] = t["financeiro"] + r.uniform(3, 24)
-        t["enviado"] = t["financeiro"] + r.uniform(1, 10)
+        t["enviado"] = t["pedido"] + r.uniform(3, 30)
         t["receb1"] = t["enviado"] + prazo * 24 + (r.uniform(-60, 6) if r.random() < 0.85 else r.uniform(30, 90))
         t["receb2"] = t["receb1"] + r.uniform(48, 120)
         etapa_final = {"aguardando_gestor": "criacao", "devolvida": "gestor", "reprovada": "gestor", "cancelada": "criacao",
-                       "aguardando_diretoria": "gestor", "aprovada": "aprovada", "em_cotacao": "cotacao",
-                       "aguardando_pedido": "fornecedor", "ped_aguardando_financeiro": "pedido",
-                       "ped_aguardando_diretoria": "financeiro", "ped_aprovado": "financeiro", "enviado": "enviado",
+                       "aprovada": "aprovada", "em_cotacao": "cotacao",
+                       "aguardando_pedido": "fornecedor", "ped_aprovado": "pedido", "enviado": "enviado",
                        "entregue_parcial": "receb1", "concluida": "receb2"}[final]
         if final == "concluida" and marcador != "divergente":
             t["receb2"] = t["receb1"]
@@ -388,7 +361,7 @@ class Semeador:
         titulo_modelo = r.choice(TITULOS[categoria])
         nome_curto = itens[0]["material"]["nome"].split(" — ")[0].split(" (")[0]
         titulo = titulo_modelo.format(item=nome_curto[0].lower() + nome_curto[1:])
-        tipo = "servico" if categoria == "Serviços técnicos" else "equipamento" if caro else "material"
+        tipo = "equipamento" if caro else "material"
         sla = {"imediato": 3, "urgente": 7, "normal": 14}[urgencia]
         s = {"id": sid, "status": None, "criado": T("criacao"), "titulo": titulo}
         ordem = ORDEM.index(final)
@@ -397,7 +370,7 @@ class Semeador:
             return ordem >= ORDEM.index(status)
 
         # ---- solicitação (linha inicial; o estado final é gravado ao término do cenário)
-        status = "aguardando_diretoria" if aberta_gestor else "aguardando_gestor"
+        status = "aguardando_gestor"
         self.exec("""insert into rg.solicitacoes (id, codigo, tipo, titulo, justificativa, setor_codigo, urgencia, status,
                        local_entrega, data_necessidade, solicitante_id, aberta_por_gestor, sla_prazo_limite, criado_em,
                        atualizado_em)
@@ -419,36 +392,26 @@ class Semeador:
         historico = [(T("criacao"), solicitante, "criacao", None, status, None)]
         assinaturas = [(solicitante, "submissao", T("criacao"), status)]
 
-        if final in ("devolvida", "reprovada") or chegou("aprovada") or final == "aguardando_diretoria":
-            decisor = gestor if not aberta_gestor else diretoria
+        if final in ("devolvida", "reprovada") or chegou("aprovada"):
+            decisor = gestor
             if final in ("devolvida", "reprovada"):
                 novo = final.replace("reprovada", "reprovada")
                 motivo = r.choice(MOTIVOS_DEVOLUCAO if final == "devolvida" else MOTIVOS_REPROVACAO)
                 campos["motivo_devolucao" if final == "devolvida" else "motivo_reprovacao"] = motivo
                 historico.append((T("gestor"), decisor, "mudanca_status", status, final, motivo))
                 assinaturas.append((decisor, "devolucao" if final == "devolvida" else "reprovacao", T("gestor"), final))
-                self._aprovacao(sid, None, "gestor" if not aberta_gestor else "diretoria",
+                self._aprovacao(sid, None, "gestor",
                                 "devolvido" if final == "devolvida" else "reprovado", decisor, motivo, valor_estimado, T("gestor"))
                 status = final
                 if final == "reprovada":
                     campos["finalizado_em"] = campos["sla_concluido_em"] = T("gestor")
             else:
-                if not aberta_gestor:
-                    campos["aprovado_gestor_por"], campos["aprovado_gestor_em"] = gestor["id"], T("gestor")
-                    proximo = "aguardando_diretoria" if (exige_dir or final == "aguardando_diretoria") else "aprovada"
-                    historico.append((T("gestor"), gestor, "mudanca_status", status, proximo, "Aprovada pelo gestor do setor"))
-                    assinaturas.append((gestor, "aprovacao_gestor", T("gestor"), proximo))
-                    self._aprovacao(sid, None, "gestor", "aprovado", gestor, "De acordo com a necessidade do setor.",
-                                    valor_estimado, T("gestor"))
-                    status = proximo
-                if status == "aguardando_diretoria" and final != "aguardando_diretoria":
-                    campos["aprovado_diretoria_por"], campos["aprovado_diretoria_em"] = diretoria["id"], T("diretoria")
-                    historico.append((T("diretoria"), diretoria, "mudanca_status", status, "aprovada",
-                                      "Aprovada pela Diretoria: investimento previsto no plano anual."))
-                    assinaturas.append((diretoria, "aprovacao_diretoria", T("diretoria"), "aprovada"))
-                    self._aprovacao(sid, None, "diretoria", "aprovado", diretoria, "Investimento previsto no plano anual.",
-                                    valor_estimado, T("diretoria"))
-                    status = "aprovada"
+                campos["aprovado_gestor_por"], campos["aprovado_gestor_em"] = gestor["id"], T("gestor")
+                historico.append((T("gestor"), gestor, "mudanca_status", status, "aprovada", "Aprovada pelo gestor do setor"))
+                assinaturas.append((gestor, "aprovacao_gestor", T("gestor"), "aprovada"))
+                self._aprovacao(sid, None, "gestor", "aprovado", gestor, "De acordo com a necessidade do setor.",
+                                valor_estimado, T("gestor"))
+                status = "aprovada"
                 if status == "aprovada":
                     campos["aprovado_em"] = T("aprovada")
         if final == "cancelada":
@@ -490,34 +453,14 @@ class Semeador:
             status = "aguardando_pedido"
 
         pedido = None
-        if chegou("ped_aguardando_financeiro") and vencedora:
-            pedido = self._pedido(sid, vencedora, itens, comprador, T("pedido"), prazo, exige_dir, campos)
+        if chegou("ped_aprovado") and vencedora:
+            pedido = self._pedido(sid, vencedora, itens, comprador, T("pedido"), prazo, campos)
             campos.update(pedido_emitido_em=T("pedido"), sla_concluido_em=T("pedido"))
             historico.append((T("pedido"), comprador, "mudanca_status", "aguardando_pedido", "em_pedido", "Pedido de compra emitido"))
             status = "em_pedido"
-            assinaturas.append((comprador, "emissao_pedido", T("pedido"), "em_pedido", pedido["id"], "aguardando_financeiro"))
-            pstatus = "aguardando_financeiro"
+            assinaturas.append((comprador, "emissao_pedido", T("pedido"), "em_pedido", pedido["id"], "aprovado"))
+            pstatus = "aprovado"
             pcampos = {}
-            precisa_dir_ped = pedido["valor"] >= alcada and not campos["aprovado_diretoria_em"]
-            if chegou("ped_aguardando_diretoria") and final != "ped_aguardando_financeiro":
-                prox = "aguardando_diretoria" if precisa_dir_ped else "aprovado"
-                pcampos.update(aprovado_financeiro_por=financeiro["id"], aprovado_financeiro_em=T("financeiro"),
-                               parecer_financeiro="Dotação orçamentária confirmada no centro de custo do setor.")
-                self._hist_pedido(sid, pedido, T("financeiro"), financeiro, pstatus, prox, "Dotação orçamentária confirmada")
-                assinaturas.append((financeiro, "aprovacao_financeiro", T("financeiro"), "em_pedido", pedido["id"], prox))
-                self._aprovacao(sid, pedido["id"], "financeiro", "aprovado", financeiro,
-                                "Dotação orçamentária confirmada no centro de custo do setor.", pedido["valor"], T("financeiro"))
-                pstatus = prox
-                if pstatus == "aguardando_diretoria" and final != "ped_aguardando_diretoria":
-                    pcampos.update(aprovado_diretoria_por=diretoria["id"], aprovado_diretoria_em=T("ped_diretoria"),
-                                   parecer_diretoria="Aprovado.")
-                    self._hist_pedido(sid, pedido, T("ped_diretoria"), diretoria, pstatus, "aprovado", "Aprovado pela Diretoria")
-                    assinaturas.append((diretoria, "aprovacao_diretoria_pedido", T("ped_diretoria"), "em_pedido",
-                                        pedido["id"], "aprovado"))
-                    self._aprovacao(sid, pedido["id"], "diretoria", "aprovado", diretoria, "Aprovado.", pedido["valor"],
-                                    T("ped_diretoria"))
-                    pstatus = "aprovado"
-                    t["enviado"] = max(t["enviado"], t["ped_diretoria"] + 2)
             if chegou("enviado") and pstatus == "aprovado":
                 previsao = (T("enviado").astimezone(TZ).date() + timedelta(days=prazo))
                 pcampos.update(enviado_por=comprador["id"], enviado_em=T("enviado"), data_prevista_entrega=previsao)
@@ -555,7 +498,7 @@ class Semeador:
             self.historico(sid, h[0], h[1], h[2], h[3], h[4], h[5])
         for a in assinaturas:
             self.assinar(sid, a[0], a[1], a[2], a[3], *(a[4:] if len(a) > 4 else ()))
-        self._notificacoes_cenario(sid, titulo, status, solicitante, gestor, diretoria, comprador, historico[-1][0], setor)
+        self._notificacoes_cenario(sid, titulo, status, solicitante, gestor, comprador, historico[-1][0], setor)
         return {"id": sid, "criado": T("criacao"), "status": status}
 
     def _aprovacao(self, sid, pedido_id, nivel, decisao, usuario, parecer, valor, quando):
@@ -585,15 +528,15 @@ class Semeador:
         return {"id": cid, "total": total, "prazo": prazo, "forn": f, "itens": linhas, "frete": frete,
                 "desconto": desconto, "valor_itens": total_itens}
 
-    def _pedido(self, sid, cot, itens, comprador, quando, prazo, exige_dir, campos):
+    def _pedido(self, sid, cot, itens, comprador, quando, prazo, campos):
         pid = str(uuid.uuid4())
         self.exec("""insert into rg.pedidos (id, codigo, solicitacao_id, cotacao_id, fornecedor_id, status, valor_itens, frete,
                         desconto, valor_total, condicoes_pagamento, prazo_entrega_dias, local_entrega, comprador_id,
-                        exige_diretoria, criado_em, atualizado_em)
-                     select %s, 'TMP-' || left(%s::text, 12), %s, c.id, c.fornecedor_id, 'aguardando_financeiro', c.valor_itens, c.frete, c.desconto,
-                            c.valor_total, c.condicoes_pagamento, c.prazo_entrega_dias, 'Almoxarifado central', %s, %s, %s, %s
+                        criado_em, atualizado_em)
+                     select %s, 'TMP-' || left(%s::text, 12), %s, c.id, c.fornecedor_id, 'aprovado', c.valor_itens, c.frete, c.desconto,
+                            c.valor_total, c.condicoes_pagamento, c.prazo_entrega_dias, 'Almoxarifado central', %s, %s, %s
                        from rg.cotacoes c where c.id = %s""",
-                  (pid, pid, sid, comprador["id"], cot["total"] >= 25000 and not campos["aprovado_diretoria_em"], quando, quando,
+                  (pid, pid, sid, comprador["id"], quando, quando,
                    cot["id"]))
         self.pedidos_criados.append((quando, pid))
         itens_por_id = {i["id"]: i for i in itens}
@@ -608,7 +551,7 @@ class Semeador:
                                            "unit": unit})
             self.exec("update rg.materiais set ultimo_preco = %s, ultima_compra_em = %s where id = %s", (unit, quando, m["id"]))
         self.exec("""insert into rg.solicitacao_historico (solicitacao_id, pedido_id, autor_id, acao, status_para, observacao,
-                        criado_em) values (%s, %s, %s, 'pedido_emitido', 'aguardando_financeiro', %s, %s)""",
+                        criado_em) values (%s, %s, %s, 'pedido_emitido', 'aprovado', %s, %s)""",
                   (sid, pid, comprador["id"], "Pedido de compra emitido", quando))
         return {"id": pid, "valor": cot["total"], "codigo": "pedido"}
 
@@ -653,12 +596,10 @@ class Semeador:
                    quando))
         return rid, situacao
 
-    def _notificacoes_cenario(self, sid, titulo, status, solicitante, gestor, diretoria, comprador, quando, setor):
+    def _notificacoes_cenario(self, sid, titulo, status, solicitante, gestor, comprador, quando, setor):
         link = f"/solicitacoes/{sid}"
         if status == "aguardando_gestor":
             self.notificar(quando, gestor, "info", "Solicitação aguardando sua aprovação", titulo, link, lida=False)
-        elif status == "aguardando_diretoria":
-            self.notificar(quando, diretoria, "info", "Solicitação aguardando aprovação da Diretoria", titulo, link, lida=False)
         elif status == "devolvida":
             self.notificar(quando, solicitante, "alerta", "Solicitação devolvida para ajustes", titulo, link, lida=False)
         elif status == "aprovada":
@@ -726,15 +667,6 @@ class Semeador:
                       (sid, pedido_id, rid, usuario["id"], usuario["papel"], acao, status_sol, status_ped, ip,
                        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Estação HRG", quando, hashes[sid], h, quando))
 
-        # Notificações dos pedidos pendentes de aprovação
-        self.exec("select id, codigo, status, criado_em, atualizado_em from rg.pedidos where status in ('aguardando_financeiro', 'aguardando_diretoria', 'aprovado')")
-        for p in self.cur.fetchall():
-            if p["status"] == "aguardando_financeiro":
-                self.notificar(p["criado_em"], self.de("financeiro"), "info", "Pedido aguardando aprovação financeira",
-                               p["codigo"], f"/pedidos/{p['id']}", lida=False)
-            elif p["status"] == "aguardando_diretoria":
-                self.notificar(p["criado_em"], self.de("diretoria"), "info", "Pedido aguardando aprovação da Diretoria",
-                               p["codigo"], f"/pedidos/{p['id']}", lida=False)
         for n in self.notificacoes:
             self.exec("""insert into rg.notificacoes (destinatario_id, tipo, titulo, mensagem, link, lida, lida_em, criado_em)
                          values (%s, %s, %s, %s, %s, %s, case when %s then %s + interval '2 hours' end, %s)""",

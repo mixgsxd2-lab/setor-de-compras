@@ -11,7 +11,6 @@ import {
 
 export const GRUPOS = {
   "": { rotulo: "Todos", status: "" },
-  aprovacao: { rotulo: "Em aprovação", status: "aguardando_financeiro,aguardando_diretoria" },
   aprovado: { rotulo: "Aprovados · a enviar", status: "aprovado" },
   entrega: { rotulo: "Aguardando entrega", status: "enviado,entregue_parcial" },
   entregue: { rotulo: "Entregues", status: "entregue" },

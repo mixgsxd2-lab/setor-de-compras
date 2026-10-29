@@ -59,9 +59,7 @@ Em ambientes que não são de produção (`RG_MODO_DEMO`, padrão quando `RG_AMB
 | Comprador | `comprador@hrg.demo` | Carlos Menezes | Cotação, propostas digitadas, mapa comparativo, escolha do fornecedor, emissão e envio do pedido |
 | Solicitante | `solicitante@hrg.demo` | Juliana Prado (UTI Adulto) | Nova solicitação com itens do catálogo, anexar/fotografar orçamento, acompanhamento |
 | Gestor | `gestor@hrg.demo` | Fernando Alves (UTI Adulto) | Aprovação, devolução e reprovação das solicitações do setor |
-| Financeiro | `financeiro@hrg.demo` | Patrícia Lemos | Aprovação financeira dos pedidos, indicadores de gasto |
-| Diretoria | `diretoria@hrg.demo` | Helena Castro | Aprovações acima da alçada, painel executivo e relatórios |
-| Auditoria | `auditoria@hrg.demo` | Roberto Nunes | Consulta somente leitura de tudo, trilha de auditoria e verificação de assinaturas |
+| Visão geral | `auditoria@hrg.demo` | Roberto Nunes | Consulta somente leitura de tudo, painéis, relatórios, trilha de auditoria e verificação de assinaturas |
 
 A base fictícia tem 20 setores, 11 categorias, ~50 materiais, 16 fornecedores (CNPJs válidos gerados), 52 solicitações em todos os status, propostas, pedidos, recebimentos parciais e totais, aprovações, assinaturas válidas, alertas, notificações e eventos de auditoria. Para recarregar em um banco vazio: `python -m rg.cli semear-demo`. **Em produção o modo demonstração é recusado** e os perfis de teste não são criados.
 
@@ -80,7 +78,7 @@ cd backend
 python -m pytest            # 29 testes: unidade + integração contra PostgreSQL real
 ```
 
-A suíte cobre o fluxo completo (solicitação → aprovação → cotação → pedido → recebimento parcial e total → conclusão), alçada da Diretoria, segregação de funções, RLS por setor e perfil (inclusive via SQL direto no papel `rg_app`), valores sempre calculados no servidor, assinaturas e sua verificação criptográfica, perfil Auditoria somente leitura, limites de anexos, alertas, bloqueio por tentativas, CSRF, LGPD, relatórios PDF/CSV e cabeçalhos de segurança.
+A suíte cobre o fluxo completo (solicitação → aprovação → cotação → pedido → recebimento parcial e total → conclusão), segregação de funções, RLS por setor e perfil (inclusive via SQL direto no papel `rg_app`), valores sempre calculados no servidor, assinaturas e sua verificação criptográfica, perfil Auditoria somente leitura, limites de anexos, alertas, bloqueio por tentativas, CSRF, LGPD, relatórios PDF/CSV e cabeçalhos de segurança.
 
 ---
 
@@ -89,10 +87,10 @@ A suíte cobre o fluxo completo (solicitação → aprovação → cotação →
 | Etapa | Responsável | Regras |
 |---|---|---|
 | Solicitação | Solicitante ou gestor do setor | Itens do catálogo ou descritos, quantidades e valor unitário estimado; justificativa ≥ 20 caracteres; até 5 documentos |
-| Aprovação | Gestor do setor → Diretoria | O gestor não aprova a própria solicitação; solicitações abertas pelo gestor vão direto à Diretoria. Valor ≥ **alçada da Diretoria** (padrão R$ 25.000) exige a Diretoria. Devolver e reprovar exigem parecer |
+| Aprovação | Gestor do setor | Decide qualquer valor (aprovar, devolver ou reprovar), inclusive as solicitações que ele mesmo abriu |
 | Cotação | Comprador | Propostas digitadas manualmente a partir do orçamento anexado/fotografado; mínimo de 3 propostas (configurável) |
 | Fornecedor | Comprador | Mapa comparativo com menor preço por item e total. Escolher com menos propostas que o mínimo, ou fora do menor preço, exige justificativa |
-| Pedido | Comprador → Financeiro → Diretoria | Itens e valores copiados da proposta vencedora (imutáveis). O Financeiro aprova; acima da alçada, também a Diretoria. Depois de aprovado, o comprador envia ao fornecedor |
+| Pedido | Comprador | Itens e valores copiados da proposta vencedora (imutáveis). O pedido já nasce aprovado; o comprador o envia ao fornecedor |
 | Recebimento | Quem abriu a solicitação | Conferência item a item (nota fiscal opcional); quantidade recebida e aceita, motivo da divergência, fotos. Recebimento parcial mantém o saldo |
 | Conclusão | Automática | Quando todos os itens são recebidos, ou quando o comprador encerra o pedido com pendência (justificado) |
 
@@ -125,7 +123,7 @@ backend/rg/  Flask
    ▼
 PostgreSQL  schemas rg (negócio) e audit (trilha imutável)
    ├─ RLS em todas as tabelas       solicitante/gestor → próprio setor · comprador → aprovadas ·
-   │                                financeiro/diretoria/auditoria/admin → global
+   │                                auditoria (visão geral)/admin → global
    ├─ triggers                      máquinas de estado, valores derivados, histórico, notificações, auditoria, pg_notify
    └─ LISTEN rg_eventos             → cada instância da API repassa eventos aos seus WebSockets
 ```
@@ -160,7 +158,7 @@ Checklist:
 - Backup do PostgreSQL **e** do volume de anexos (`/data/storage`), guardando `RG_ENCRYPTION_KEYS` em cofre separado. Sem a chave, os anexos não podem ser decifrados.
 - Rotação de chave: adicione a nova chave no **início** de `RG_ENCRYPTION_KEYS` e execute `python -m rg.cli rotacionar-chaves`.
 - Várias instâncias: use Redis em `RG_RATELIMIT_STORAGE_URI`. O tempo real já funciona entre instâncias via LISTEN/NOTIFY.
-- Alçada da Diretoria, mínimo de propostas e antecedência dos alertas são ajustados em **Usuários › Alçadas e parâmetros** (registrado na auditoria).
+- Mínimo de propostas e antecedência dos alertas são ajustados em **Usuários › Alçadas e parâmetros** (registrado na auditoria).
 - A cada nova versão do frontend, incremente `VERSAO` em `frontend/sw.js`.
 
 ### Variáveis de ambiente

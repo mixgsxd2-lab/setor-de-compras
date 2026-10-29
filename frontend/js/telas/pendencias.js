@@ -7,10 +7,8 @@ import { ativarLinhasClicaveis, badgePedido, badgeSla, badgeStatus, badgeUrgenci
 
 const ORIENTACAO = {
   gestor: "Solicitações do seu setor aguardando aprovação.",
-  diretoria: "Solicitações e pedidos acima da alçada aguardando a Diretoria.",
   solicitante: "Solicitações devolvidas para ajustes e pedidos enviados aguardando a sua confirmação de recebimento.",
   comprador: "Solicitações para iniciar cotação, registrar propostas ou emitir pedido, e pedidos aprovados para enviar ao fornecedor.",
-  financeiro: "Pedidos de compra aguardando aprovação orçamentária.",
 };
 const PROXIMA = {
   aguardando_gestor: "Analisar e decidir", aguardando_diretoria: "Analisar e decidir", devolvida: "Ajustar e reenviar",

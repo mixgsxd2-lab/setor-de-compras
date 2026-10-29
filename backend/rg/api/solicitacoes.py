@@ -60,12 +60,12 @@ ORDENACOES = {
     "urgencia": "array_position(array['imediato','urgente','normal'], v.urgencia::text), v.sla_prazo_limite",
 }
 ETAPAS = {
-    "aprovacao": ("aguardando_gestor", "aguardando_diretoria", "devolvida"),
+    "aprovacao": ("aguardando_gestor", "devolvida"),
     "cotacao": ("aprovada", "em_cotacao"),
     "fornecedor": ("aguardando_pedido",),
     "pedido": ("em_pedido",),
     "recebimento": ("recebida_parcial",),
-    "abertas": ("aguardando_gestor", "aguardando_diretoria", "devolvida", "aprovada", "em_cotacao",
+    "abertas": ("aguardando_gestor", "devolvida", "aprovada", "em_cotacao",
                 "aguardando_pedido", "em_pedido", "recebida_parcial"),
     "encerradas": ("concluida", "reprovada", "cancelada"),
 }
@@ -75,10 +75,7 @@ def fila_sql(usuario: dict) -> tuple[str, list]:
     """Condição SQL das solicitações que aguardam uma ação do usuário."""
     papel = usuario["papel"]
     if papel == "gestor":
-        return ("(v.status = 'aguardando_gestor' and v.setor_codigo = %s and v.solicitante_id <> %s)",
-                [usuario["setor_codigo"], usuario["id"]])
-    if papel == "diretoria":
-        return "v.status = 'aguardando_diretoria'", []
+        return "(v.status = 'aguardando_gestor' and v.setor_codigo = %s)", [usuario["setor_codigo"]]
     if papel == "solicitante":
         return "(v.status = 'devolvida' and v.setor_codigo = %s)", [usuario["setor_codigo"]]
     if papel == "comprador":
@@ -192,7 +189,7 @@ def exportar_csv():
     return resposta_csv("solicitacoes-compras-hrg.csv",
                         ["Código", "Tipo", "Título", "Setor", "Urgência", "Status", "Prazo de atendimento", "Solicitante",
                          "Comprador", "Fornecedor", "Pedido", "Valor estimado", "Valor contratado", "Abertura"],
-                        [[l["codigo"], TIPO_SOLICITACAO[l["tipo"]], l["titulo"], l["setor_nome"], URGENCIA[l["urgencia"]],
+                        [[l["codigo"], TIPO_SOLICITACAO.get(l["tipo"], l["tipo"]), l["titulo"], l["setor_nome"], URGENCIA[l["urgencia"]],
                           STATUS_SOLICITACAO[l["status"]], SLA_SITUACAO[l["sla_situacao"]], l["solicitante_nome"],
                           l["comprador_nome"], l["fornecedor_nome"], l["pedido_codigo"], _num(l["valor_estimado"]),
                           _num(l["valor_final"]), pdf.data_hora(l["criado_em"])]
@@ -305,7 +302,7 @@ def executar_acao(solicitacao_id, acao: str):
         raise NaoEncontrado("Ação inexistente")
     u = g.usuario
     if ACOES[acao] == "aprovacao":
-        if not (pode(u, "solicitacao.aprovar_gestor") or pode(u, "solicitacao.aprovar_diretoria")):
+        if not pode(u, "solicitacao.aprovar_gestor"):
             raise ApiError("Seu perfil não pode executar esta ação", 403, "proibido")
     elif not pode(u, ACOES[acao]):
         raise ApiError("Seu perfil não pode executar esta ação", 403, "proibido")

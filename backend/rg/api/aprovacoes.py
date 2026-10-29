@@ -19,21 +19,10 @@ def pendencias(cur, usuario: dict) -> dict:
                  v.itens_qtd, v.rodada, v.aberta_por_gestor"""
     if papel == "gestor":
         cur.execute(f"""select {colunas} from rg.v_solicitacoes v
-                         where v.status = 'aguardando_gestor' and v.setor_codigo = %s and v.solicitante_id <> %s
+                         where v.status = 'aguardando_gestor' and v.setor_codigo = %s
                          order by array_position(array['imediato','urgente','normal'], v.urgencia::text), v.criado_em""",
-                    (usuario["setor_codigo"], usuario["id"]))
+                    (usuario["setor_codigo"],))
         solicitacoes = cur.fetchall()
-    elif papel == "diretoria":
-        cur.execute(f"""select {colunas} from rg.v_solicitacoes v where v.status = 'aguardando_diretoria'
-                         order by array_position(array['imediato','urgente','normal'], v.urgencia::text), v.criado_em""")
-        solicitacoes = cur.fetchall()
-    status_pedido = {"financeiro": "aguardando_financeiro", "diretoria": "aguardando_diretoria"}.get(papel)
-    if status_pedido:
-        cur.execute("""select id, codigo, status, valor_total, fornecedor_nome, fornecedor_fantasia, solicitacao_id,
-                              solicitacao_codigo, solicitacao_titulo, setor_nome, setor_cor, urgencia, comprador_nome,
-                              criado_em, prazo_entrega_dias, condicoes_pagamento, exige_diretoria, itens_qtd
-                         from rg.v_pedidos where status = %s order by criado_em""", (status_pedido,))
-        pedidos = cur.fetchall()
     return {"solicitacoes": solicitacoes, "pedidos": pedidos}
 
 
@@ -42,8 +31,6 @@ def pendencias(cur, usuario: dict) -> dict:
 def pendentes():
     with tx() as cur:
         dados = pendencias(cur, g.usuario)
-        cur.execute("select rg.config_num('alcada_diretoria') as a")
-        dados["alcada_diretoria"] = cur.fetchone()["a"]
     return jsonify(dados)
 
 

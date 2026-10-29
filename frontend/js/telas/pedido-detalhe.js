@@ -1,4 +1,4 @@
-// Pedido de compra: aprovação (Financeiro/Diretoria), envio ao fornecedor, recebimento e conferência.
+// Pedido de compra: envio ao fornecedor, recebimento e conferência.
 import { api } from "../api.js";
 import { emitir, ouvir, rotulo } from "../estado.js";
 import { html, renderizar, on, debounce, mostrarErrosCampos } from "../ui/dom.js";
@@ -9,17 +9,16 @@ import {
 } from "../ui/componentes.js";
 import { ativarUpload, zonaUpload } from "../ui/upload.js";
 
-const ETAPAS_PEDIDO = ["Emitido", "Aprovação", "Enviado", "Entregue"];
+const ETAPAS_PEDIDO = ["Emitido", "Enviado", "Entregue"];
 
 function fluxoPedido(p) {
   const st = p.status;
-  let atual = { aguardando_financeiro: 1, aguardando_diretoria: 1, aprovado: 2, enviado: 3, entregue_parcial: 3, entregue: 4, reprovado: 1, cancelado: 1 }[st];
+  let atual = { aguardando_financeiro: 1, aguardando_diretoria: 1, aprovado: 1, enviado: 2, entregue_parcial: 2, entregue: 3, reprovado: 1, cancelado: 1 }[st];
   const bloq = ["reprovado", "cancelado"].includes(st);
-  if (st === "cancelado") atual = p.enviado_em ? 2 : p.aprovado_financeiro_em ? 2 : 1;
+  if (st === "cancelado") atual = p.enviado_em ? 2 : 1;
   const det = [formato.dataCurta(p.criado_em),
-    st === "aguardando_financeiro" ? "Financeiro" : st === "aguardando_diretoria" ? "Diretoria" : st === "reprovado" ? "Reprovado" : p.aprovado_financeiro_em ? formato.dataCurta(p.aprovado_diretoria_em || p.aprovado_financeiro_em) : "",
     p.enviado_em ? formato.dataCurta(p.enviado_em) : "", st === "entregue" ? formato.dataCurta(p.concluido_em) : st === "entregue_parcial" ? `${p.percentual_recebido}% recebido` : ""];
-  return html`<ol class="fluxo quatro" aria-label="Etapas do pedido">${ETAPAS_PEDIDO.map((n, i) => {
+  return html`<ol class="fluxo tres" aria-label="Etapas do pedido">${ETAPAS_PEDIDO.map((n, i) => {
     const estadoE = i < atual ? "concluida" : i === atual ? (bloq ? "bloqueada" : "atual") : "pendente";
     return html`<li class="etapa ${estadoE}"><span class="marcador">${estadoE === "concluida" ? icone("check") : estadoE === "bloqueada" ? icone("x") : i + 1}</span><span class="nome">${n}</span><span class="detalhe">${det[i] || " "}</span></li>`;
   })}</ol>`;
@@ -98,13 +97,11 @@ export async function montar({ raiz, params }) {
     const p = d.pedido;
     const f = d.fornecedor;
     const a = d.acoes;
-    const decisao = a.includes("aprovar");
     const avisos = [];
     if (p.status === "reprovado") avisos.push(aviso("perigo", "Pedido reprovado", p.motivo_reprovacao));
     if (p.status === "cancelado") avisos.push(aviso("perigo", "Pedido cancelado", p.motivo_cancelamento));
     if (p.atrasado) avisos.push(aviso("perigo", `Entrega atrasada há ${p.dias_atraso} dia(s)`, `A previsão era ${formato.data(p.data_prevista_entrega)}. Contate o fornecedor e atualize a previsão.`));
     if (p.encerrado_com_pendencia) avisos.push(aviso("alerta", "Encerrado com pendência", p.justificativa_encerramento));
-    if (p.status === "aguardando_diretoria") avisos.push(aviso("info", "Acima da alçada", "O valor do pedido ultrapassa a alçada e a solicitação não havia passado pela Diretoria."));
     renderizar(raiz, html`
       ${cabecalho({
         titulo: `Pedido ${p.codigo}`, extra: badgePedido(p.status, true),
@@ -153,16 +150,6 @@ export async function montar({ raiz, params }) {
                 <div class="t-meta">${h.autor_nome || "Sistema"} · ${formato.dataHora(h.criado_em)}</div>${h.observacao ? html`<div class="t-obs">${h.observacao}</div>` : ""}</div></li>`)}</ol></div></section>
           </div>
           <aside>
-            ${decisao ? html`<section class="cartao destaque"><div class="cartao-cabecalho"><h2>${icone("carimbo")}Sua decisão · ${p.status === "aguardando_financeiro" ? "Financeiro" : "Diretoria"}</h2></div>
-              <form class="cartao-corpo painel-decisao" id="form-decisao" novalidate>
-                <div class="destaque-valor">${formato.moeda(p.valor_total)}</div>
-                <p class="pequeno texto-3">${p.setor_nome} · ${p.condicoes_pagamento || "pagamento a combinar"} · entrega em ${p.prazo_entrega_dias} dias</p>
-                ${p.status === "aguardando_financeiro" && p.exige_diretoria ? aviso("info", "Após o Financeiro, segue para a Diretoria", "O valor está acima da alçada.") : ""}
-                <div class="campo"><label for="parecer">Parecer <span class="texto-3">(obrigatório para reprovar)</span></label><textarea id="parecer" name="texto" maxlength="2000" placeholder="Ex.: dotação orçamentária confirmada no centro de custo."></textarea></div>
-                <div class="grupo-botoes"><button type="button" class="botao sucesso" data-decisao="aprovar">${icone("check")}Aprovar pedido</button>
-                  <button type="button" class="botao perigo-suave" data-decisao="reprovar">${icone("x_circulo")}Reprovar</button></div>
-                <p class="minusculo texto-3">Reprovar reabre a cotação para o comprador renegociar.</p>
-              </form></section>` : ""}
             <section class="cartao"><div class="cartao-cabecalho"><h2>${icone("fornecedor")}Fornecedor</h2></div>
               <div class="cartao-corpo"><dl class="pares lista">
                 <div><dt>Razão social</dt><dd>${f.razao_social}</dd></div><div><dt>CNPJ</dt><dd class="mono">${formato.cnpj(f.cnpj)}</dd></div>
@@ -194,11 +181,6 @@ export async function montar({ raiz, params }) {
     } catch (erro) { toastErro(erro); if (erro.status === 409) atualizar(await api.get(`/pedidos/${params.id}`)); }
   }
 
-  on(raiz, "click", "[data-decisao]", async (e, b) => {
-    const texto = raiz.querySelector("#parecer").value.trim();
-    if (b.dataset.decisao === "reprovar" && texto.length < 10) { mostrarErrosCampos(raiz.querySelector("#form-decisao"), { texto: "Informe o motivo (mínimo 10 caracteres)" }); return; }
-    await acao(b.dataset.decisao, { texto }, b, b.dataset.decisao === "aprovar" ? "Pedido aprovado" : "Pedido reprovado");
-  });
   on(raiz, "click", "[data-enviar]", async () => {
     const p = d.pedido;
     const r = await confirmar({

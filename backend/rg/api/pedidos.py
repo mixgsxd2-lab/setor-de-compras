@@ -23,10 +23,6 @@ ORDENACOES = {
 
 def fila_pedidos_sql(usuario: dict) -> tuple[str, list]:
     papel = usuario["papel"]
-    if papel == "financeiro":
-        return "p.status = 'aguardando_financeiro'", []
-    if papel == "diretoria":
-        return "p.status = 'aguardando_diretoria'", []
     if papel == "comprador":
         return "(p.status = 'aprovado' and p.comprador_id = %s)", [usuario["id"]]
     if papel in ("solicitante", "gestor"):
@@ -197,13 +193,11 @@ def documento(pedido_id):
 def executar_acao(pedido_id, acao: str):
     pid = str(pedido_id)
     u = g.usuario
-    requisitos = {"aprovar": None, "reprovar": None, "enviar": "pedido.emitir", "cancelar": None,
+    requisitos = {"enviar": "pedido.emitir", "cancelar": None,
                   "encerrar": "pedido.emitir", "atualizar_previsao": "pedido.emitir"}
     if acao not in requisitos:
         raise NaoEncontrado("Ação inexistente")
-    if acao in ("aprovar", "reprovar"):
-        permitido = pode(u, "pedido.aprovar_financeiro") or pode(u, "pedido.aprovar_diretoria")
-    elif acao == "cancelar":
+    if acao == "cancelar":
         permitido = u["papel"] in ("comprador", "admin")
     else:
         permitido = pode(u, requisitos[acao])
@@ -215,9 +209,7 @@ def executar_acao(pedido_id, acao: str):
     versao, texto = comum.get("versao"), comum.get("texto")
     ip, ua = ip_cliente(), user_agent()
     with tx() as cur:
-        if acao in ("aprovar", "reprovar"):
-            workflow.decidir_pedido(cur, u, pid, acao, texto, versao, ip, ua)
-        elif acao == "enviar":
+        if acao == "enviar":
             workflow.enviar_pedido(cur, u, pid, comum.get("data_prevista_entrega"), versao, ip, ua)
         elif acao == "cancelar":
             workflow.cancelar_pedido(cur, u, pid, texto, versao, ip, ua)

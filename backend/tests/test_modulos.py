@@ -19,9 +19,10 @@ def test_painel_escopo_pendencias_e_relatorios(clientes):
     assert p_lab["periodo"]["setor"] == "laboratorio"  # setor fica restrito ao próprio
     assert all(s["setor_codigo"] == "laboratorio" for s in p_lab["por_setor"])
 
-    pend = clientes["financeiro"].get("/api/v1/painel/pendencias").get_json()
-    assert pend["contadores"]["aprovacoes"] >= 1 and pend["pedidos"]
-    assert clientes["financeiro"].get("/api/v1/aprovacoes/pendentes").get_json()["pedidos"]
+    criar_solicitacao(clientes["solicitante"], com_anexo=False)
+    pend = clientes["gestor"].get("/api/v1/painel/pendencias").get_json()
+    assert pend["contadores"]["aprovacoes"] >= 1 and pend["solicitacoes"]
+    assert clientes["gestor"].get("/api/v1/aprovacoes/pendentes").get_json()["solicitacoes"]
 
     for url in ("/api/v1/painel/relatorio.pdf", "/api/v1/solicitacoes/relatorio.pdf"):
         r = admin.get(url)
@@ -90,20 +91,13 @@ def test_fornecedores_validacao_e_desempenho(clientes):
     assert "valor_contratado" not in resumo and "email" not in resumo
 
 
-def test_parametros_de_alcada_somente_admin(clientes):
+def test_parametros_somente_admin(clientes):
     admin, comprador = clientes["admin"], clientes["comprador"]
-    assert comprador.patch("/api/v1/configuracoes/alcada_diretoria", json={"valor": "1"}).status_code == 403
-    r = admin.patch("/api/v1/configuracoes/alcada_diretoria", json={"valor": "10000"})
-    assert r.status_code == 200
-    try:
-        d = criar_solicitacao(clientes["solicitante"], com_anexo=False)
-        d = acao(clientes["gestor"], d["solicitacao"]["id"], "aprovar", versao=d["solicitacao"]["versao"]).get_json()
-        assert d["solicitacao"]["status"] == "aguardando_diretoria"  # R$ 14.000 > nova alçada
-    finally:
-        admin.patch("/api/v1/configuracoes/alcada_diretoria", json={"valor": "25000"})
+    assert comprador.patch("/api/v1/configuracoes/minimo_cotacoes", json={"valor": "2"}).status_code == 403
+    assert admin.patch("/api/v1/configuracoes/alcada_diretoria", json={"valor": "1"}).status_code == 404  # extinta
     assert admin.patch("/api/v1/configuracoes/minimo_cotacoes", json={"valor": "0"}).status_code == 422
     matriz = admin.get("/api/v1/permissoes").get_json()["matriz"]
-    assert any(m["capacidade"] == "pedido.aprovar_financeiro" and m["perfis"] == ["financeiro"] for m in matriz)
+    assert any(m["capacidade"] == "solicitacao.aprovar_gestor" and m["perfis"] == ["gestor"] for m in matriz)
 
 
 def test_auditoria_registra_e_e_imutavel(clientes, url_banco):
@@ -168,7 +162,7 @@ def test_dados_de_demonstracao_sao_coerentes_com_as_regras(app, url_banco):
         with conn.transaction():
             cur = conn.cursor()
             cur.execute("select count(*) as n from rg.usuarios where email like '%%@hrg.demo'")
-            if cur.fetchone()["n"] < 7:
+            if cur.fetchone()["n"] < 5:
                 for t in TABELAS:
                     cur.execute(f"alter table {t} disable trigger user")
                 Semeador(cur, app.config["SIGNATURE_SECRET"], senhas.gerar_hash(SENHA_TESTE), "2026.1").executar()
@@ -182,11 +176,6 @@ def test_dados_de_demonstracao_sao_coerentes_com_as_regras(app, url_banco):
     alvo = pend[-1]
     d = acao(gestor, alvo["id"], "aprovar", versao=gestor.get(f"/api/v1/solicitacoes/{alvo['id']}").get_json()["solicitacao"]["versao"])
     assert d.status_code == 200, d.get_json()
-
-    financeiro = perfil("financeiro")
-    pedido = financeiro.get("/api/v1/aprovacoes/pendentes").get_json()["pedidos"][0]
-    p = financeiro.get(f"/api/v1/pedidos/{pedido['id']}").get_json()
-    assert acao_pedido(financeiro, pedido["id"], "aprovar", versao=p["pedido"]["versao"]).status_code == 200
 
     recebimento = perfil("solicitante")  # quem abriu a solicitação confirma o recebimento
     enviados = recebimento.get("/api/v1/pedidos", query_string={"fila": 1}).get_json()["itens"]

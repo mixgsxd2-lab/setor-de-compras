@@ -242,18 +242,19 @@ def permissoes():
 
 
 @bp.get("/configuracoes")
-@requer_papel("admin", "auditoria", "comprador", "financeiro", "diretoria")
+@requer_papel("admin", "auditoria", "comprador")
 def listar_configuracoes():
     with tx() as cur:
         cur.execute("""select c.*, u.nome as atualizado_por_nome from rg.configuracoes c
-                         left join rg.v_usuarios_publico u on u.id = c.atualizado_por order by c.chave""")
+                         left join rg.v_usuarios_publico u on u.id = c.atualizado_por
+                        where c.chave <> 'alcada_diretoria' order by c.chave""")
         return jsonify({"itens": cur.fetchall()})
 
 
 @bp.patch("/configuracoes/<chave>")
 @requer_papel("admin")
 def atualizar_configuracao(chave):
-    limites = {"alcada_diretoria": (0, 100_000_000), "minimo_cotacoes": (1, 10), "dias_alerta_entrega": (0, 30)}
+    limites = {"minimo_cotacoes": (1, 10), "dias_alerta_entrega": (0, 30)}
     if chave not in limites:
         raise NaoEncontrado("Parâmetro inexistente")
     minimo, maximo = limites[chave]

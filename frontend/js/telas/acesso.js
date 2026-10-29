@@ -17,7 +17,7 @@ function moldura(conteudo, { largo = false } = {}) {
         <p class="lead">Da necessidade do setor à entrega conferida: cada solicitação com responsáveis, prazos, aprovações por alçada e histórico completo.</p>
         <div class="auth-fluxo">${etapas.map((e, i) => html`${i ? icone("seta_dir") : ""}<span>${e}</span>`)}</div>
         <ul class="auth-destaques">
-          <li>${icone("carimbo")}<span><strong>Aprovação por alçada</strong>Gestor do setor, Diretoria acima do limite e Financeiro no pedido de compra.</span></li>
+          <li>${icone("carimbo")}<span><strong>Aprovação pelo gestor</strong>O gestor do setor aprova, Compras cota e emite o pedido, e quem pediu confirma o recebimento.</span></li>
           <li>${icone("balanca")}<span><strong>Cotações comparadas</strong>Propostas registradas pelo comprador, com mapa de preços por item.</span></li>
           <li>${icone("escudo")}<span><strong>Dados protegidos no hospital</strong>Sem integração com serviços de IA. Assinatura eletrônica e trilha de auditoria imutável.</span></li>
         </ul>
@@ -169,7 +169,7 @@ async function cadastro({ raiz }) {
       <div class="campo"><label for="email">E-mail institucional<span class="obrigatorio" aria-hidden="true">*</span></label>
         <input id="email" name="email" type="email" autocomplete="email" required></div>
       <div class="campo col-6"><label for="papel">Perfil de acesso<span class="obrigatorio" aria-hidden="true">*</span></label>
-        <select id="papel" name="papel" required>${opcoes({ solicitante: "Solicitante", gestor: "Gestor de setor", comprador: "Comprador", financeiro: "Financeiro" }, "solicitante")}</select></div>
+        <select id="papel" name="papel" required>${opcoes({ solicitante: "Solicitante", gestor: "Gestor de setor", comprador: "Comprador" }, "solicitante")}</select></div>
       <div class="campo col-6"><label for="setor_codigo">Setor<span class="obrigatorio" aria-hidden="true">*</span></label>
         <select id="setor_codigo" name="setor_codigo" required>${opcoesSetores(setores, "", { vazio: "Selecione…", somenteOperacionais: true })}</select></div>
       <div class="campo col-6"><label for="cargo">Cargo</label><input id="cargo" name="cargo" maxlength="80" autocomplete="organization-title"></div>
@@ -192,7 +192,7 @@ async function cadastro({ raiz }) {
   const setor = form.querySelector("#setor_codigo");
   papel.addEventListener("change", () => {
     const operacionais = ["gestor", "solicitante"].includes(papel.value);
-    const padrao = { comprador: "suprimentos", financeiro: "financeiro" }[papel.value] || "";
+    const padrao = { comprador: "suprimentos" }[papel.value] || "";
     renderizar(setor, opcoesSetores(setores, padrao, { vazio: "Selecione…", somenteOperacionais: operacionais }));
   });
   form.addEventListener("submit", async (e) => {

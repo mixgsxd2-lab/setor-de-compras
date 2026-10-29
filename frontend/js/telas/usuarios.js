@@ -11,7 +11,6 @@ import {
 } from "../ui/componentes.js";
 
 const DESCRICAO_PARAMETRO = {
-  alcada_diretoria: ["Alçada da Diretoria (R$)", "Solicitações e pedidos a partir deste valor exigem aprovação da Diretoria."],
   minimo_cotacoes: ["Mínimo de propostas por cotação", "Abaixo disso, a escolha do fornecedor exige justificativa."],
   dias_alerta_entrega: ["Antecedência de alerta de entrega (dias)", "Entregas previstas dentro deste prazo aparecem nos alertas."],
 };
@@ -172,7 +171,7 @@ export async function montar({ raiz, consulta }) {
     renderizar(corpo, html`<div class="cartao-corpo pilha">
       ${aviso("info", "Parâmetros do fluxo de compras", "Alterações valem imediatamente para novas decisões e ficam registradas na trilha de auditoria.")}
       <div class="grade-3">${r.itens.map((c) => { const [titulo, ajuda] = DESCRICAO_PARAMETRO[c.chave] || [c.chave, c.descricao]; return html`<form class="cartao" data-parametro="${c.chave}"><div class="cartao-corpo pilha-sm">
-        <div class="campo"><label for="p-${c.chave}">${titulo}</label><input id="p-${c.chave}" class="num" name="valor" inputmode="decimal" value="${formato.entradaDecimal(c.valor, c.chave === "alcada_diretoria" ? 2 : 0)}" ${admin ? "" : html`disabled`}>
+        <div class="campo"><label for="p-${c.chave}">${titulo}</label><input id="p-${c.chave}" class="num" name="valor" inputmode="decimal" value="${formato.entradaDecimal(c.valor, 0)}" ${admin ? "" : html`disabled`}>
           <p class="ajuda">${ajuda}</p></div>
         <p class="minusculo texto-3">Atualizado ${formato.relativo(c.atualizado_em)}${c.atualizado_por_nome ? ` por ${c.atualizado_por_nome}` : ""}</p>
         ${admin ? html`<button class="botao pequeno" type="submit">${icone("check")}Salvar</button>` : ""}</div></form>`; })}</div></div>`);

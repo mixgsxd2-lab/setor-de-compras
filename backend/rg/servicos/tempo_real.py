@@ -42,7 +42,7 @@ def pode_ver(conexao: Conexao, evento: dict) -> bool:
         return evento.get("destinatario") == conexao.usuario_id
     if tabela == "usuarios":
         return conexao.papel in ("admin", "auditoria") or evento.get("usuario") == conexao.usuario_id
-    if conexao.papel in ("admin", "financeiro", "diretoria", "auditoria"):
+    if conexao.papel in ("admin", "auditoria"):
         return True
     if conexao.papel in ("solicitante", "gestor"):
         return evento.get("setor") == conexao.setor
