@@ -1,8 +1,7 @@
 # Blueprint do Render (plano FREE: sem disco persistente; anexos em /data/storage são perdidos a cada deploy/reinício;
 # o PostgreSQL free expira após 30 dias):
 # web service (Docker) + PostgreSQL gerenciado.
-# Após o deploy, defina RG_ENCRYPTION_KEYS (python -m rg.cli gerar-chaves) e crie o admin no Shell:
-#   python -m rg.cli criar-admin
+# Defina RG_ADMIN_EMAIL e RG_ADMIN_SENHA (mín. 12 caracteres) para criar o administrador no boot.
 services:
   - type: web
     name: setor-de-compras
@@ -34,7 +33,12 @@ services:
         generateValue: true
       - key: RG_SIGNATURE_SECRET
         generateValue: true
-      - key: RG_ENCRYPTION_KEYS
+      # Opcional: se ausente, a chave de cifragem é derivada de RG_SECRET_KEY (não troque RG_SECRET_KEY depois).
+      - key: RG_ADMIN_EMAIL
+        sync: false
+      - key: RG_ADMIN_NOME
+        value: Administrador
+      - key: RG_ADMIN_SENHA
         sync: false
 
 databases:
