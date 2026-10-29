@@ -154,7 +154,6 @@ def usuarios(url_banco):
         "gestor_lab": criar_usuario(url_banco, papel="gestor", setor="laboratorio", nome="Lara Laboratório"),
         "comprador": criar_usuario(url_banco, papel="comprador", setor="suprimentos", nome="Carlos Comprador"),
         "financeiro": criar_usuario(url_banco, papel="financeiro", setor="financeiro", nome="Fabiana Financeiro"),
-        "recebimento": criar_usuario(url_banco, papel="recebimento", setor="suprimentos", nome="Rui Recebimento"),
         "diretoria": criar_usuario(url_banco, papel="diretoria", setor="diretoria", nome="Diana Diretoria"),
         "auditoria": criar_usuario(url_banco, papel="auditoria", setor="controladoria", nome="Otto Auditor"),
     }

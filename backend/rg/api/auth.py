@@ -118,7 +118,7 @@ def cadastro():
         Campo("nome", "texto", obrigatorio=True, min_len=3, max_len=120, rotulo="Nome completo"),
         Campo("email", "email", obrigatorio=True, rotulo="E-mail institucional"),
         Campo("setor_codigo", "texto", obrigatorio=True, max_len=40, rotulo="Setor"),
-        Campo("papel", "escolha", obrigatorio=True, escolhas=("solicitante", "gestor", "comprador", "financeiro", "recebimento"),
+        Campo("papel", "escolha", obrigatorio=True, escolhas=("solicitante", "gestor", "comprador", "financeiro"),
               rotulo="Perfil de acesso"),
         Campo("cargo", "texto", max_len=80, rotulo="Cargo"),
         Campo("telefone", "texto", max_len=20, rotulo="Telefone"),

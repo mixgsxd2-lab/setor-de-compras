@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from .errors import Proibido
 
-TODOS = ("admin", "comprador", "solicitante", "gestor", "financeiro", "recebimento", "diretoria", "auditoria")
+TODOS = ("admin", "comprador", "solicitante", "gestor", "financeiro", "diretoria", "auditoria")
 
 # capacidade: (grupo, descrição, perfis)
 CAPACIDADES: dict[str, tuple[str, str, tuple[str, ...]]] = {
@@ -20,15 +20,15 @@ CAPACIDADES: dict[str, tuple[str, str, tuple[str, ...]]] = {
                              ("solicitante", "gestor", "comprador", "admin")),
     "cotacao.gerenciar": ("Cotações", "Conduzir cotações, registrar propostas e definir o fornecedor", ("comprador",)),
     "pedido.ver": ("Pedidos", "Consultar pedidos de compra",
-                   ("admin", "comprador", "financeiro", "recebimento", "diretoria", "auditoria", "gestor", "solicitante")),
+                   ("admin", "comprador", "financeiro", "diretoria", "auditoria", "gestor", "solicitante")),
     "pedido.emitir": ("Pedidos", "Emitir, enviar e cancelar pedidos de compra", ("comprador",)),
     "pedido.aprovar_financeiro": ("Aprovações", "Aprovar pedidos de compra (orçamento)", ("financeiro",)),
     "pedido.aprovar_diretoria": ("Aprovações", "Aprovar pedidos acima da alçada", ("diretoria",)),
-    "recebimento.registrar": ("Recebimento", "Registrar entregas e conferir itens", ("recebimento",)),
+    "recebimento.registrar": ("Recebimento", "Confirmar o recebimento das próprias solicitações", ("solicitante", "gestor")),
     "recebimento.ver": ("Recebimento", "Consultar recebimentos",
-                        ("admin", "comprador", "financeiro", "recebimento", "diretoria", "auditoria")),
+                        ("admin", "comprador", "financeiro", "diretoria", "auditoria", "gestor", "solicitante")),
     "fornecedor.ver": ("Fornecedores", "Consultar fornecedores e desempenho",
-                       ("admin", "comprador", "financeiro", "diretoria", "auditoria", "recebimento")),
+                       ("admin", "comprador", "financeiro", "diretoria", "auditoria")),
     "fornecedor.gerenciar": ("Fornecedores", "Cadastrar e editar fornecedores", ("comprador", "admin")),
     "material.ver": ("Catálogo", "Consultar materiais e categorias", TODOS),
     "material.gerenciar": ("Catálogo", "Cadastrar e editar materiais e categorias", ("comprador", "admin")),

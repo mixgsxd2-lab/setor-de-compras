@@ -130,9 +130,8 @@ def test_roteamento_de_eventos_em_tempo_real():
     evento = {"tabela": "solicitacoes", "setor": "uti_adulto", "status": "aguardando_gestor", "aprovada": False}
     assert pode_ver(c("admin"), evento) and pode_ver(c("gestor"), evento) and pode_ver(c("auditoria"), evento)
     assert not pode_ver(c("comprador", "suprimentos"), evento) and not pode_ver(c("gestor", "laboratorio"), evento)
-    assert not pode_ver(c("recebimento", "suprimentos"), evento)
     evento.update(status="em_pedido", aprovada=True)
-    assert pode_ver(c("comprador", "suprimentos"), evento) and pode_ver(c("recebimento", "suprimentos"), evento)
+    assert pode_ver(c("comprador", "suprimentos"), evento)
     notif = {"tabela": "notificacoes", "destinatario": "g"}
     assert pode_ver(c("gestor", uid="g"), notif) and not pode_ver(c("admin"), notif)
 
@@ -169,7 +168,7 @@ def test_dados_de_demonstracao_sao_coerentes_com_as_regras(app, url_banco):
         with conn.transaction():
             cur = conn.cursor()
             cur.execute("select count(*) as n from rg.usuarios where email like '%%@hrg.demo'")
-            if cur.fetchone()["n"] < 8:
+            if cur.fetchone()["n"] < 7:
                 for t in TABELAS:
                     cur.execute(f"alter table {t} disable trigger user")
                 Semeador(cur, app.config["SIGNATURE_SECRET"], senhas.gerar_hash(SENHA_TESTE), "2026.1").executar()
@@ -189,7 +188,7 @@ def test_dados_de_demonstracao_sao_coerentes_com_as_regras(app, url_banco):
     p = financeiro.get(f"/api/v1/pedidos/{pedido['id']}").get_json()
     assert acao_pedido(financeiro, pedido["id"], "aprovar", versao=p["pedido"]["versao"]).status_code == 200
 
-    recebimento = perfil("recebimento")
+    recebimento = perfil("solicitante")  # quem abriu a solicitação confirma o recebimento
     enviados = recebimento.get("/api/v1/pedidos", query_string={"fila": 1}).get_json()["itens"]
     p = recebimento.get(f"/api/v1/pedidos/{enviados[0]['id']}").get_json()
     itens = [{"pedido_item_id": i["id"], "quantidade_recebida": str(i["saldo"]), "quantidade_aceita": str(i["saldo"])}

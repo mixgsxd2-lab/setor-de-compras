@@ -1,6 +1,6 @@
 """Dados de demonstração 100% fictícios para apresentação do sistema.
 
-Gera fornecedores, catálogo, usuários dos 8 perfis e solicitações em todas as etapas do fluxo
+Gera fornecedores, catálogo, usuários dos 7 perfis e solicitações em todas as etapas do fluxo
 (com itens, aprovações, propostas, pedidos, recebimentos, assinaturas, histórico, notificações e
 auditoria), distribuídas nos últimos meses para que painéis e relatórios tenham conteúdo realista.
 
@@ -350,7 +350,7 @@ class Semeador:
         diretoria = self.de("diretoria")
         comprador = self.por_papel["comprador"][n % len(self.por_papel["comprador"])]
         financeiro = self.de("financeiro")
-        receb = self.por_papel["recebimento"][n % len(self.por_papel["recebimento"])]
+        receb = solicitante  # quem abriu a solicitação confirma o recebimento
         exige_dir = valor_estimado >= alcada
 
         # Linha do tempo relativa (horas desde a abertura)

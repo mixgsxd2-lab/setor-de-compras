@@ -29,8 +29,8 @@ def fila_pedidos_sql(usuario: dict) -> tuple[str, list]:
         return "p.status = 'aguardando_diretoria'", []
     if papel == "comprador":
         return "(p.status = 'aprovado' and p.comprador_id = %s)", [usuario["id"]]
-    if papel == "recebimento":
-        return "p.status in ('enviado', 'entregue_parcial')", []
+    if papel in ("solicitante", "gestor"):
+        return "(p.status in ('enviado', 'entregue_parcial') and p.solicitante_id = %s)", [usuario["id"]]
     return "false", []
 
 
@@ -233,7 +233,7 @@ def executar_acao(pedido_id, acao: str):
 
 
 CAMPOS_RECEBIMENTO = [
-    Campo("nota_fiscal", "texto", obrigatorio=True, max_len=60, rotulo="Nota fiscal"),
+    Campo("nota_fiscal", "texto", max_len=60, rotulo="Nota fiscal"),
     Campo("data_emissao_nf", "data", rotulo="Emissão da NF"),
     Campo("valor_nf", "decimal", minimo=0, maximo=999_999_999, rotulo="Valor da NF"),
     Campo("observacoes", "texto", max_len=2000, rotulo="Observações"),

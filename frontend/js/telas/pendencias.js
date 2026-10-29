@@ -8,16 +8,15 @@ import { ativarLinhasClicaveis, badgePedido, badgeSla, badgeStatus, badgeUrgenci
 const ORIENTACAO = {
   gestor: "Solicitações do seu setor aguardando aprovação.",
   diretoria: "Solicitações e pedidos acima da alçada aguardando a Diretoria.",
-  solicitante: "Solicitações devolvidas ao seu setor para ajustes.",
+  solicitante: "Solicitações devolvidas para ajustes e pedidos enviados aguardando a sua confirmação de recebimento.",
   comprador: "Solicitações para iniciar cotação, registrar propostas ou emitir pedido, e pedidos aprovados para enviar ao fornecedor.",
   financeiro: "Pedidos de compra aguardando aprovação orçamentária.",
-  recebimento: "Pedidos enviados aos fornecedores aguardando entrega e conferência.",
 };
 const PROXIMA = {
   aguardando_gestor: "Analisar e decidir", aguardando_diretoria: "Analisar e decidir", devolvida: "Ajustar e reenviar",
   aprovada: "Iniciar cotação", em_cotacao: "Registrar propostas e definir fornecedor", aguardando_pedido: "Emitir pedido de compra",
 };
-const PROXIMA_PEDIDO = { aguardando_financeiro: "Aprovar pedido", aguardando_diretoria: "Aprovar pedido", aprovado: "Enviar ao fornecedor", enviado: "Registrar entrega", entregue_parcial: "Registrar saldo da entrega" };
+const PROXIMA_PEDIDO = { aguardando_financeiro: "Aprovar pedido", aguardando_diretoria: "Aprovar pedido", aprovado: "Enviar ao fornecedor", enviado: "Confirmar recebimento", entregue_parcial: "Registrar saldo da entrega" };
 
 export async function montar({ raiz }) {
   const p = await api.get("/painel/pendencias");

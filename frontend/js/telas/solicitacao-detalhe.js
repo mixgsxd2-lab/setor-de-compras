@@ -160,7 +160,7 @@ function abaPedido(d) {
     ${d.recebimentos.length ? html`<section class="cartao"><div class="cartao-cabecalho"><h2>${icone("caminhao")}Recebimentos</h2></div>
       <div class="tabela-envoltorio"><table class="tabela responsiva"><thead><tr><th>Recebimento</th><th>Nota fiscal</th><th>Conferente</th><th>Situação</th><th>Data</th></tr></thead>
       <tbody>${d.recebimentos.map((r) => html`<tr><td class="principal-td"><div class="principal-celula"><strong>${r.codigo}</strong><small>${r.pedido_codigo}</small></div></td>
-        <td data-rotulo="Nota fiscal">NF ${r.nota_fiscal}${r.valor_nf ? html`<br><small class="texto-3">${formato.moeda(r.valor_nf)}</small>` : ""}</td><td data-rotulo="Conferente">${r.recebido_por_nome}</td>
+        <td data-rotulo="Nota fiscal">${r.nota_fiscal ? `NF ${r.nota_fiscal}` : "Sem NF"}${r.valor_nf ? html`<br><small class="texto-3">${formato.moeda(r.valor_nf)}</small>` : ""}</td><td data-rotulo="Conferente">${r.recebido_por_nome}</td>
         <td data-rotulo="Situação">${badgeRecebimento(r.situacao)}${r.observacoes ? html`<br><small class="texto-3">${r.observacoes}</small>` : ""}</td><td data-rotulo="Data" class="nowrap">${formato.dataHora(r.recebido_em)}</td></tr>`)}</tbody></table></div></section>` : ""}
   </div>`;
 }

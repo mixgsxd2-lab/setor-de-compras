@@ -33,10 +33,10 @@ export async function modalRecebimento(pedidoId) {
   return new Promise((resolve) => {
     let resultado = null;
     const m = modal({
-      titulo: `Registrar entrega · ${p.codigo}`, sub: `${p.fornecedor_fantasia || p.fornecedor_nome} · previsão ${formato.data(p.data_prevista_entrega)}`, tamanho: "extra",
+      titulo: `Confirmar recebimento · ${p.codigo}`, sub: `${p.fornecedor_fantasia || p.fornecedor_nome} · previsão ${formato.data(p.data_prevista_entrega)}`, tamanho: "extra",
       conteudo: html`<form id="form-rec" class="pilha" novalidate>
         <div class="form-grade">
-          <div class="campo col-4"><label for="r-nf">Número da nota fiscal<span class="obrigatorio">*</span></label><input id="r-nf" name="nota_fiscal" required maxlength="60" autofocus></div>
+          <div class="campo col-4"><label for="r-nf">Número da nota fiscal</label><input id="r-nf" name="nota_fiscal" maxlength="60" autofocus></div>
           <div class="campo col-4"><label for="r-data">Emissão da NF</label><input id="r-data" name="data_emissao_nf" type="date" max="${formato.hojeISO()}"></div>
           <div class="campo col-4"><label for="r-valor">Valor da NF</label><div class="entrada-prefixo"><span>R$</span><input id="r-valor" name="valor_nf" inputmode="decimal" placeholder="0,00"></div></div>
         </div>
@@ -53,7 +53,7 @@ export async function modalRecebimento(pedidoId) {
         <div class="campo"><label for="r-obs">Observações da conferência</label><textarea id="r-obs" name="observacoes" maxlength="2000"></textarea></div>
         ${zonaUpload({ id: "nf-arquivos", max: 3, rotulo: "Nota fiscal e fotos da entrega", ajuda: "Anexe ou fotografe a nota fiscal e, se houver divergência, fotos da carga." })}
       </form>`,
-      rodape: html`<button class="botao secundario" data-fechar>Cancelar</button><button class="botao" type="submit" form="form-rec">${icone("assinatura")}Assinar e registrar entrega</button>`,
+      rodape: html`<button class="botao secundario" data-fechar>Cancelar</button><button class="botao" type="submit" form="form-rec">${icone("assinatura")}Assinar e confirmar recebimento</button>`,
       aoFechar: () => resolve(resultado),
     });
     const form = m.el.querySelector("#form-rec");
@@ -70,7 +70,6 @@ export async function modalRecebimento(pedidoId) {
         motivo_divergencia: tr.querySelector('[name="motivo"]').value.trim(),
       }));
       const erros = {};
-      if (!form.nota_fiscal.value.trim()) erros.nota_fiscal = "Informe o número da nota fiscal";
       if (!itens.some((i) => i.quantidade_recebida > 0)) erros.itens = "Informe a quantidade recebida de ao menos um item";
       else if (itens.some((i) => i.quantidade_aceita > i.quantidade_recebida)) erros.itens = "A quantidade aceita não pode superar a recebida";
       else if (itens.some((i) => i.quantidade_aceita > i.saldo)) erros.itens = "A quantidade aceita não pode superar o saldo do pedido";
@@ -111,7 +110,7 @@ export async function montar({ raiz, params }) {
         titulo: `Pedido ${p.codigo}`, extra: badgePedido(p.status, true),
         sub: html`${p.fornecedor_fantasia || p.fornecedor_nome} · <a href="/solicitacoes/${p.solicitacao_id}">${p.solicitacao_codigo} · ${p.solicitacao_titulo}</a>`,
         migalhas: [{ rotulo: "Pedidos de compra", href: "/pedidos" }, { rotulo: p.codigo }],
-        acoes: html`${a.includes("receber") ? html`<button class="botao" data-receber>${icone("caminhao")}Registrar entrega</button>` : ""}
+        acoes: html`${a.includes("receber") ? html`<button class="botao" data-receber>${icone("caminhao")}Confirmar recebimento</button>` : ""}
           ${a.includes("enviar") ? html`<button class="botao" data-enviar>${icone("enviar")}Enviar ao fornecedor</button>` : ""}
           ${a.includes("atualizar_previsao") ? html`<button class="botao secundario" data-previsao>${icone("calendario")}Atualizar previsão</button>` : ""}
           ${a.includes("encerrar") ? html`<button class="botao secundario" data-encerrar>${icone("check_circulo")}Encerrar com pendência</button>` : ""}
@@ -138,13 +137,13 @@ export async function montar({ raiz, params }) {
 
             <section class="cartao"><div class="cartao-cabecalho"><h2>${icone("caminhao")}Recebimentos</h2></div>
               ${d.recebimentos.length ? html`<ul class="lista-itens">${d.recebimentos.map((r) => html`<li><div class="cartao-corpo compacto pilha-sm">
-                <div class="linha-flex"><strong>${r.codigo}</strong><span class="texto-3 pequeno">NF ${r.nota_fiscal}${r.valor_nf ? ` · ${formato.moeda(r.valor_nf)}` : ""}</span><span class="espacador"></span>${badgeRecebimento(r.situacao)}</div>
+                <div class="linha-flex"><strong>${r.codigo}</strong><span class="texto-3 pequeno">${r.nota_fiscal ? `NF ${r.nota_fiscal}` : "Sem NF"}${r.valor_nf ? ` · ${formato.moeda(r.valor_nf)}` : ""}</span><span class="espacador"></span>${badgeRecebimento(r.situacao)}</div>
                 <div class="minusculo texto-3">${r.recebido_por_nome} · ${formato.dataHora(r.recebido_em)}</div>
                 <table class="tabela densa"><tbody>${r.itens.map((ri) => html`<tr><td>${ri.descricao}</td><td class="num">${formato.numero(ri.quantidade_recebida)} recebido(s)</td>
                   <td class="num">${formato.numero(ri.quantidade_aceita)} aceito(s)</td><td class="texto-3 pequeno">${ri.motivo_divergencia || ""}</td></tr>`)}</tbody></table>
                 ${r.observacoes ? html`<p class="pequeno texto-2">${r.observacoes}</p>` : ""}
                 ${r.anexos.length ? html`<div class="linha-flex">${r.anexos.map((an) => html`<button class="botao secundario pequeno" data-anexo="${an.id}">${icone(an.mime.startsWith("image/") ? "camera" : "pdf")}${an.nome_original}</button>`)}</div>` : ""}
-              </div></li>`)}</ul>` : vazio("Nenhuma entrega registrada", p.status === "enviado" ? "O Recebimento registra a entrega na chegada da mercadoria." : "", "", "caminhao", true)}
+              </div></li>`)}</ul>` : vazio("Nenhuma entrega registrada", p.status === "enviado" ? "Quem abriu a solicitação confirma o recebimento quando a mercadoria chegar." : "", "", "caminhao", true)}
             </section>
 
             <section class="cartao"><div class="cartao-cabecalho"><h2>${icone("historico")}Histórico do pedido</h2></div>

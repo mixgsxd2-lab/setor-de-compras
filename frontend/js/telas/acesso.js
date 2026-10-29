@@ -169,7 +169,7 @@ async function cadastro({ raiz }) {
       <div class="campo"><label for="email">E-mail institucional<span class="obrigatorio" aria-hidden="true">*</span></label>
         <input id="email" name="email" type="email" autocomplete="email" required></div>
       <div class="campo col-6"><label for="papel">Perfil de acesso<span class="obrigatorio" aria-hidden="true">*</span></label>
-        <select id="papel" name="papel" required>${opcoes({ solicitante: "Solicitante", gestor: "Gestor de setor", comprador: "Comprador", financeiro: "Financeiro", recebimento: "Recebimento" }, "solicitante")}</select></div>
+        <select id="papel" name="papel" required>${opcoes({ solicitante: "Solicitante", gestor: "Gestor de setor", comprador: "Comprador", financeiro: "Financeiro" }, "solicitante")}</select></div>
       <div class="campo col-6"><label for="setor_codigo">Setor<span class="obrigatorio" aria-hidden="true">*</span></label>
         <select id="setor_codigo" name="setor_codigo" required>${opcoesSetores(setores, "", { vazio: "Selecione…", somenteOperacionais: true })}</select></div>
       <div class="campo col-6"><label for="cargo">Cargo</label><input id="cargo" name="cargo" maxlength="80" autocomplete="organization-title"></div>
@@ -192,7 +192,7 @@ async function cadastro({ raiz }) {
   const setor = form.querySelector("#setor_codigo");
   papel.addEventListener("change", () => {
     const operacionais = ["gestor", "solicitante"].includes(papel.value);
-    const padrao = { comprador: "suprimentos", recebimento: "suprimentos", financeiro: "financeiro" }[papel.value] || "";
+    const padrao = { comprador: "suprimentos", financeiro: "financeiro" }[papel.value] || "";
     renderizar(setor, opcoesSetores(setores, padrao, { vazio: "Selecione…", somenteOperacionais: operacionais }));
   });
   form.addEventListener("submit", async (e) => {

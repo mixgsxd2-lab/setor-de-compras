@@ -54,7 +54,7 @@ export async function montar({ raiz, consulta }) {
             <td data-rotulo="Setor">${badgeSetor(p.setor_codigo, p.setor_nome, p.setor_cor)}</td>
             <td data-rotulo="Previsão"><strong>${formato.data(p.data_prevista_entrega)}</strong><br>${p.atrasado ? html`<span class="badge perigo">${icone("alerta")}${p.dias_atraso} dia(s) de atraso</span>` : badgePedido(p.status)}</td>
             <td data-rotulo="Recebido"><div class="progresso-rotulado"><div class="progresso"><span data-largura="${p.percentual_recebido}"></span></div>${p.percentual_recebido}%</div></td>
-            <td class="col-acao">${podeReceber ? html`<button class="botao pequeno" data-receber="${p.id}">${icone("caminhao")}Registrar entrega</button>` : ""}</td></tr>`)}</tbody></table></div>${paginacao(r)}`
+            <td class="col-acao">${podeReceber && String(p.solicitante_id) === String(estado.usuario.id) ? html`<button class="botao pequeno" data-receber="${p.id}">${icone("caminhao")}Confirmar recebimento</button>` : ""}</td></tr>`)}</tbody></table></div>${paginacao(r)}`
           : vazio("Nenhuma entrega aguardada", "Os pedidos aparecem aqui quando o comprador os envia ao fornecedor.", "", "caminhao"));
       } else {
         const r = await api.get("/recebimentos", { q, situacao: form.situacao.value, pagina, por_pagina: 30 });
@@ -62,7 +62,7 @@ export async function montar({ raiz, consulta }) {
           <thead><tr><th>Recebimento</th><th>Nota fiscal</th><th>Fornecedor</th><th>Setor</th><th>Situação</th><th>Conferente</th><th>Data</th></tr></thead>
           <tbody>${r.itens.map((x) => html`<tr data-href="/pedidos/${x.pedido_id}" tabindex="0">
             <td class="principal-td"><div class="principal-celula"><strong>${x.codigo}</strong><small>${x.pedido_codigo} · ${x.solicitacao_titulo}</small></div></td>
-            <td data-rotulo="Nota fiscal">NF ${x.nota_fiscal}${x.valor_nf ? html`<br><small class="texto-3">${formato.moeda(x.valor_nf)}</small>` : ""}</td>
+            <td data-rotulo="Nota fiscal">${x.nota_fiscal ? `NF ${x.nota_fiscal}` : "Sem NF"}${x.valor_nf ? html`<br><small class="texto-3">${formato.moeda(x.valor_nf)}</small>` : ""}</td>
             <td data-rotulo="Fornecedor">${x.fornecedor_fantasia || x.fornecedor_nome}</td><td data-rotulo="Setor">${badgeSetor(null, x.setor_nome, x.setor_cor)}</td>
             <td data-rotulo="Situação">${badgeRecebimento(x.situacao)}</td><td data-rotulo="Conferente">${x.recebido_por_nome}</td>
             <td data-rotulo="Data" class="nowrap">${formato.dataHora(x.recebido_em)}</td></tr>`)}</tbody></table></div>${paginacao(r)}`

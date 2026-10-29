@@ -48,8 +48,6 @@ def pode_ver(conexao: Conexao, evento: dict) -> bool:
         return evento.get("setor") == conexao.setor
     if conexao.papel == "comprador":
         return bool(evento.get("aprovada"))
-    if conexao.papel == "recebimento":
-        return evento.get("status") in ("em_pedido", "recebida_parcial", "concluida")
     return False
 
 

@@ -25,8 +25,6 @@ def calcular(cur, usuario: dict) -> list[dict]:
     for s in cur.fetchall():
         if papel == "comprador" and s["status"] not in ("aprovada", "em_cotacao", "aguardando_pedido"):
             continue
-        if papel == "recebimento":
-            continue
         estourado = s["sla_situacao"] == "estourado"
         add("sla", "critico" if estourado else "alerta",
             "Prazo de atendimento estourado" if estourado else "Prazo de atendimento vence em menos de 24 h",
@@ -47,7 +45,7 @@ def calcular(cur, usuario: dict) -> list[dict]:
         if p["atrasado"]:
             add("entrega", "critico", f"Entrega atrasada há {p['dias_atraso']} dia(s)", f"{p['codigo']} · {fornecedor}",
                 f"/pedidos/{p['id']}", p["data_prevista_entrega"], p["setor_nome"], p["setor_cor"], p["codigo"])
-        elif papel in ("recebimento", "comprador", "admin"):
+        elif papel in ("solicitante", "gestor", "comprador", "admin"):
             add("entrega", "info", "Entrega prevista para os próximos dias", f"{p['codigo']} · {fornecedor}",
                 f"/pedidos/{p['id']}", p["data_prevista_entrega"], p["setor_nome"], p["setor_cor"], p["codigo"])
 
@@ -95,14 +93,14 @@ def calcular(cur, usuario: dict) -> list[dict]:
                 c["validade_proposta"], c["setor_nome"], c["setor_cor"], c["codigo"])
 
     # Recebimentos com divergência (últimos 30 dias)
-    if papel in ("comprador", "recebimento", "admin", "financeiro", "auditoria", "diretoria"):
+    if papel in ("comprador", "solicitante", "gestor", "admin", "financeiro", "auditoria", "diretoria"):
         cur.execute("""select pedido_id, codigo, pedido_codigo, situacao, recebido_em, nota_fiscal, fornecedor_nome,
                               fornecedor_fantasia, setor_nome, setor_cor
                          from rg.v_recebimentos where situacao <> 'conforme' and recebido_em > now() - interval '30 days'
                         order by recebido_em desc limit 20""")
         for r in cur.fetchall():
             add("recebimento", "alerta", "Recebimento com divergência" if r["situacao"] == "divergente" else "Entrega recusada",
-                f"{r['pedido_codigo']} · NF {r['nota_fiscal']} · {r['fornecedor_fantasia'] or r['fornecedor_nome']}",
+                f"{r['pedido_codigo']}{' · NF ' + r['nota_fiscal'] if r['nota_fiscal'] else ''} · {r['fornecedor_fantasia'] or r['fornecedor_nome']}",
                 f"/pedidos/{r['pedido_id']}", r["recebido_em"], r["setor_nome"], r["setor_cor"], r["codigo"])
 
     alertas.sort(key=lambda a: (GRAVIDADE[a["gravidade"]], str(a["data"] or "")))

@@ -6,17 +6,15 @@ PAPEL = {
     "solicitante": "Solicitante",
     "gestor": "Gestor de setor",
     "financeiro": "Financeiro",
-    "recebimento": "Recebimento",
     "diretoria": "Diretoria",
     "auditoria": "Auditoria",
 }
 PAPEL_DESCRICAO = {
     "admin": "Administra usuários, setores, catálogo, fornecedores e parâmetros. Visão completa, sem aprovar compras.",
     "comprador": "Conduz cotações, registra propostas, define o fornecedor e emite e envia pedidos de compra.",
-    "solicitante": "Abre solicitações de compra do seu setor e acompanha cada etapa até a entrega.",
+    "solicitante": "Abre solicitações de compra do seu setor, acompanha cada etapa e confirma o recebimento.",
     "gestor": "Aprova, devolve ou reprova as solicitações do seu setor.",
     "financeiro": "Aprova os pedidos de compra sob a ótica orçamentária e acompanha os gastos.",
-    "recebimento": "Registra entregas, confere quantidades e anexa notas fiscais.",
     "diretoria": "Aprova solicitações e pedidos acima da alçada e acompanha os indicadores.",
     "auditoria": "Acesso somente leitura a todos os registros, histórico e trilha de auditoria.",
 }

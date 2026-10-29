@@ -68,7 +68,7 @@ def minhas_pendencias():
             "aprovacoes": len(aprov["solicitacoes"]) + len(aprov["pedidos"]),
             "cotacoes": sum(1 for s in solicitacoes if s["status"] in ("aprovada", "em_cotacao", "aguardando_pedido")),
             "pedidos": len(pedidos),
-            "recebimentos": len(pedidos) if u["papel"] == "recebimento" else 0,
+            "recebimentos": 0,
             "alertas": sum(1 for a in alertas if a["gravidade"] != "info"),
             "notificacoes": nao_lidas,
             "usuarios": usuarios_pendentes,

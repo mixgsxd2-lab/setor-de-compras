@@ -51,7 +51,7 @@ Bancos criados pela versão 1.x são detectados e recriados automaticamente com 
 
 ### Versão de demonstração
 
-Em ambientes que não são de produção (`RG_MODO_DEMO`, padrão quando `RG_AMBIENTE` ≠ `producao`), a tela inicial mostra os **8 perfis de teste** com login em um clique. Todos usam a senha `Teste@Hospital2026`:
+Em ambientes que não são de produção (`RG_MODO_DEMO`, padrão quando `RG_AMBIENTE` ≠ `producao`), a tela inicial mostra os **perfis de teste** com login em um clique. Todos usam a senha `Teste@Hospital2026`:
 
 | Perfil | Conta | Pessoa (fictícia) | O que demonstrar |
 |---|---|---|---|
@@ -60,7 +60,6 @@ Em ambientes que não são de produção (`RG_MODO_DEMO`, padrão quando `RG_AMB
 | Solicitante | `solicitante@hrg.demo` | Juliana Prado (UTI Adulto) | Nova solicitação com itens do catálogo, anexar/fotografar orçamento, acompanhamento |
 | Gestor | `gestor@hrg.demo` | Fernando Alves (UTI Adulto) | Aprovação, devolução e reprovação das solicitações do setor |
 | Financeiro | `financeiro@hrg.demo` | Patrícia Lemos | Aprovação financeira dos pedidos, indicadores de gasto |
-| Recebimento | `recebimento@hrg.demo` | Marcos Vieira | Conferência de entregas, nota fiscal, divergências e recebimento parcial |
 | Diretoria | `diretoria@hrg.demo` | Helena Castro | Aprovações acima da alçada, painel executivo e relatórios |
 | Auditoria | `auditoria@hrg.demo` | Roberto Nunes | Consulta somente leitura de tudo, trilha de auditoria e verificação de assinaturas |
 
@@ -94,7 +93,7 @@ A suíte cobre o fluxo completo (solicitação → aprovação → cotação →
 | Cotação | Comprador | Propostas digitadas manualmente a partir do orçamento anexado/fotografado; mínimo de 3 propostas (configurável) |
 | Fornecedor | Comprador | Mapa comparativo com menor preço por item e total. Escolher com menos propostas que o mínimo, ou fora do menor preço, exige justificativa |
 | Pedido | Comprador → Financeiro → Diretoria | Itens e valores copiados da proposta vencedora (imutáveis). O Financeiro aprova; acima da alçada, também a Diretoria. Depois de aprovado, o comprador envia ao fornecedor |
-| Recebimento | Recebimento | Conferência item a item com nota fiscal; quantidade recebida e aceita, motivo da divergência, fotos. Recebimento parcial mantém o saldo |
+| Recebimento | Quem abriu a solicitação | Conferência item a item (nota fiscal opcional); quantidade recebida e aceita, motivo da divergência, fotos. Recebimento parcial mantém o saldo |
 | Conclusão | Automática | Quando todos os itens são recebidos, ou quando o comprador encerra o pedido com pendência (justificado) |
 
 Prazos de atendimento: **Imediata 3 dias · Urgente 7 dias · Normal 14 dias** (da abertura até o pedido). Alertas automáticos para prazos a vencer ou estourados e para entregas atrasadas (antecedência configurável). O administrador **não** aprova compras (segregação de funções).
@@ -126,7 +125,7 @@ backend/rg/  Flask
    ▼
 PostgreSQL  schemas rg (negócio) e audit (trilha imutável)
    ├─ RLS em todas as tabelas       solicitante/gestor → próprio setor · comprador → aprovadas ·
-   │                                recebimento → com pedido · financeiro/diretoria/auditoria/admin → global
+   │                                financeiro/diretoria/auditoria/admin → global
    ├─ triggers                      máquinas de estado, valores derivados, histórico, notificações, auditoria, pg_notify
    └─ LISTEN rg_eventos             → cada instância da API repassa eventos aos seus WebSockets
 ```

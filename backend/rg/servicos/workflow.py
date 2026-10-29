@@ -362,7 +362,7 @@ def registrar_recebimento(cur, usuario: dict, pedido_id: str, dados: dict, itens
         """insert into rg.recebimentos (pedido_id, solicitacao_id, nota_fiscal, data_emissao_nf, valor_nf, observacoes,
                                         recebido_por)
            values (%s, %s, %s, %s, %s, %s, %s) returning id""",
-        (pedido_id, p["solicitacao_id"], dados["nota_fiscal"], dados.get("data_emissao_nf"), dados.get("valor_nf"),
+        (pedido_id, p["solicitacao_id"], dados.get("nota_fiscal"), dados.get("data_emissao_nf"), dados.get("valor_nf"),
          dados.get("observacoes"), usuario["id"]),
     )
     rid = str(cur.fetchone()["id"])
@@ -512,6 +512,7 @@ def acoes_pedido(usuario: dict, p: dict) -> list[str]:
     if papel in ("comprador", "admin") and status in ("aguardando_financeiro", "aguardando_diretoria", "aprovado") or (
             papel in ("comprador", "admin") and status == "enviado" and not p.get("percentual_recebido")):
         acoes.append("cancelar")
-    if papel == "recebimento" and status in ("enviado", "entregue_parcial"):
+    if papel in ("solicitante", "gestor") and status in ("enviado", "entregue_parcial") \
+            and str(p.get("solicitante_id")) == usuario["id"]:
         acoes.append("receber")
     return acoes

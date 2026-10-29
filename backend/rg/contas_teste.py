@@ -15,8 +15,6 @@ CONTAS_TESTE = [
      "setor_codigo": "uti_adulto", "cargo": "Coordenador Médico da UTI"},
     {"papel": "financeiro", "nome": "Patrícia Lemos", "email": "financeiro@hrg.demo",
      "setor_codigo": "financeiro", "cargo": "Analista Financeira"},
-    {"papel": "recebimento", "nome": "Marcos Vieira", "email": "recebimento@hrg.demo",
-     "setor_codigo": "suprimentos", "cargo": "Conferente de Almoxarifado"},
     {"papel": "diretoria", "nome": "Helena Castro", "email": "diretoria@hrg.demo",
      "setor_codigo": "diretoria", "cargo": "Diretora Administrativa"},
     {"papel": "auditoria", "nome": "Roberto Nunes", "email": "auditoria@hrg.demo",

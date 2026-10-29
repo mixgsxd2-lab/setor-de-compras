@@ -22,7 +22,7 @@ const ACAO_SOLICITACAO = {
   aguardando_gestor: "Aprovar", aguardando_diretoria: "Aprovar", devolvida: "Ajustar e reenviar", aprovada: "Iniciar cotação",
   em_cotacao: "Registrar propostas", aguardando_pedido: "Emitir pedido",
 };
-const ACAO_PEDIDO = { aguardando_financeiro: "Aprovar pedido", aguardando_diretoria: "Aprovar pedido", aprovado: "Enviar ao fornecedor", enviado: "Registrar entrega", entregue_parcial: "Registrar entrega" };
+const ACAO_PEDIDO = { aguardando_financeiro: "Aprovar pedido", aguardando_diretoria: "Aprovar pedido", aprovado: "Enviar ao fornecedor", enviado: "Confirmar recebimento", entregue_parcial: "Registrar entrega" };
 
 function blocoPendencias(pend) {
   const itens = [

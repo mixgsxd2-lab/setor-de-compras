@@ -11,7 +11,8 @@ from conftest import (Cliente, acao, acao_pedido, ate_aprovada, ate_pedido, cria
 
 def test_fluxo_completo_ate_conclusao(clientes, usuarios):
     solicitante, gestor, comprador = clientes["solicitante"], clientes["gestor"], clientes["comprador"]
-    financeiro, recebimento = clientes["financeiro"], clientes["recebimento"]
+    financeiro = clientes["financeiro"]
+    recebimento = solicitante  # quem abriu a solicitação confirma o recebimento
 
     d = criar_solicitacao(solicitante)
     s, sid = d["solicitacao"], d["solicitacao"]["id"]
@@ -21,9 +22,8 @@ def test_fluxo_completo_ate_conclusao(clientes, usuarios):
     assert d["anexos"][0]["nome_original"] == "orcamento-medtec.pdf"
     assert "ocr_status" not in d["anexos"][0] and "dados_ocr" not in d["anexos"][0]  # nenhum conteúdo é interpretado
 
-    # Visibilidade: Compras e Recebimento ainda não enxergam; ninguém fora do gestor aprova
+    # Visibilidade: Compras ainda não enxerga; ninguém fora do gestor aprova
     assert comprador.get(f"/api/v1/solicitacoes/{sid}").status_code == 404
-    assert recebimento.get(f"/api/v1/solicitacoes/{sid}").status_code == 404
     for nome in ("solicitante", "comprador", "financeiro", "admin", "auditoria"):
         assert acao(clientes[nome], sid, "aprovar", versao=s["versao"]).status_code in (403, 404, 422), nome
 
@@ -68,7 +68,7 @@ def test_fluxo_completo_ate_conclusao(clientes, usuarios):
     assert r.status_code == 200, r.get_json()
     d, pid = r.get_json(), r.get_json()["pedido_criado"]
     assert d["solicitacao"]["status"] == "em_pedido"
-    p = recebimento.get(f"/api/v1/pedidos/{pid}").get_json()  # Recebimento passa a enxergar
+    p = recebimento.get(f"/api/v1/pedidos/{pid}").get_json()  # o solicitante acompanha o pedido
     assert p["pedido"]["status"] == "aguardando_financeiro" and p["pedido"]["codigo"].startswith("PC-")
     assert Decimal(str(p["pedido"]["valor_total"])) == Decimal("13240.00") and len(p["itens"]) == 2
     assert p["acoes"] == []
@@ -80,6 +80,12 @@ def test_fluxo_completo_ate_conclusao(clientes, usuarios):
     assert p["pedido"]["status"] == "aprovado"
     p = acao_pedido(comprador, pid, "enviar", versao=p["pedido"]["versao"]).get_json()
     assert p["pedido"]["status"] == "enviado" and p["pedido"]["data_prevista_entrega"]
+
+    # Somente quem abriu a solicitação confirma o recebimento (nem outro setor, nem o gestor, nem Compras)
+    for nome in ("solicitante_lab", "gestor", "comprador", "financeiro", "admin"):
+        r = clientes[nome].post(f"/api/v1/pedidos/{pid}/recebimentos", json={
+            "itens": [{"pedido_item_id": p["itens"][0]["id"], "quantidade_recebida": "1", "quantidade_aceita": "1"}]})
+        assert r.status_code in (403, 404), (nome, r.status_code)
 
     # 1º recebimento: parcial com divergência (uma unidade avariada)
     monitor, cabo = p["itens"]
@@ -115,7 +121,7 @@ def test_fluxo_completo_ate_conclusao(clientes, usuarios):
     for a in d["assinaturas"]:
         v = solicitante.get(f"/api/v1/assinaturas/{a['id']}/verificar").get_json()
         assert v["registro_integro"] is True
-    assert any(n["titulo"] == "Solicitação concluída" for n in solicitante.get("/api/v1/notificacoes").get_json()["itens"])
+    assert any(n["titulo"] == "Solicitação concluída" for n in comprador.get("/api/v1/notificacoes").get_json()["itens"])
 
     # Encerrada: nada mais pode ser alterado
     assert acao(comprador, sid, "cancelar", versao=d["solicitacao"]["versao"], texto="Tentativa após conclusão").status_code == 422
@@ -234,13 +240,13 @@ def test_cancelamentos_e_permissoes(clientes):
 
     d, pid = ate_pedido(clientes)
     p = comprador.get(f"/api/v1/pedidos/{pid}").get_json()
-    assert acao_pedido(clientes["recebimento"], pid, "cancelar", versao=p["pedido"]["versao"], texto="x" * 20).status_code == 403
+    assert acao_pedido(clientes["solicitante"], pid, "cancelar", versao=p["pedido"]["versao"], texto="x" * 20).status_code == 403
     p = acao_pedido(admin, pid, "cancelar", versao=p["pedido"]["versao"], texto="Fornecedor comunicou falta de estoque.").get_json()
     assert p["pedido"]["status"] == "cancelado"
     assert comprador.get(f"/api/v1/solicitacoes/{d['solicitacao']['id']}").get_json()["solicitacao"]["status"] == "em_cotacao"
 
     # Criação é exclusiva de solicitantes e gestores
-    for nome in ("comprador", "financeiro", "recebimento", "diretoria", "auditoria", "admin"):
+    for nome in ("comprador", "financeiro", "diretoria", "auditoria", "admin"):
         r = clientes[nome].post("/api/v1/solicitacoes", json={"tipo": "material", "titulo": "Teste de permissão",
                                                               "justificativa": "Justificativa longa o bastante.",
                                                               "itens": [{"descricao": "Item", "unidade": "UN", "quantidade": 1}]})
@@ -377,7 +383,7 @@ def test_seguranca_cabecalhos_e_frontend(app):
     assert "connect-src 'self'" in r.headers["Content-Security-Policy"]  # nenhum serviço externo
     assert r.headers["X-Frame-Options"] == "DENY" and r.headers["Cache-Control"] == "no-store"
     meta = r.get_json()
-    assert len(meta["rotulos"]["papel"]) == 8
+    assert len(meta["rotulos"]["papel"]) == 7
     assert meta["etapas"][0] == "Solicitação" and meta["etapas"][-1] == "Conclusão"
     assert c.get("/solicitacoes/qualquer").status_code == 200
     assert c.get("/api/v1/inexistente").status_code == 404

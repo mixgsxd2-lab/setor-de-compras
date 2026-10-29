@@ -412,7 +412,7 @@ def dossie_solicitacao(detalhe: dict, *, autor: str, instituicao: str, tz: str) 
     if detalhe["recebimentos"]:
         el.append(Paragraph("Recebimentos", E["h2"]))
         el.append(_tabela(["Código", "Data", "Nota fiscal", "Conferente", "Situação", "Observações"],
-                          [[r["codigo"], data_hora(r["recebido_em"], tz), r["nota_fiscal"], r["recebido_por_nome"],
+                          [[r["codigo"], data_hora(r["recebido_em"], tz), r["nota_fiscal"] or "—", r["recebido_por_nome"],
                             SITUACAO_RECEBIMENTO.get(r["situacao"]), r["observacoes"] or ""] for r in detalhe["recebimentos"]],
                           [largura * f for f in (0.12, 0.14, 0.12, 0.18, 0.14, 0.3)]))
 

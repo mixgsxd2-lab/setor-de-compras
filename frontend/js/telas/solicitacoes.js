@@ -46,7 +46,7 @@ export async function montar({ raiz, consulta }) {
   };
   const subtitulo = doSetor ? `Solicitações do setor ${u.setor_nome}`
     : u.papel === "comprador" ? "Solicitações aprovadas encaminhadas ao setor de Compras"
-      : u.papel === "recebimento" ? "Solicitações com pedido de compra emitido" : "Todas as solicitações de compra do hospital";
+      : "Todas as solicitações de compra do hospital";
 
   renderizar(raiz, html`
     ${cabecalho({
