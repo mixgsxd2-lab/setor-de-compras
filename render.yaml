@@ -1,4 +1,6 @@
-# Blueprint do Render: web service (Docker) + PostgreSQL gerenciado.
+# Blueprint do Render (plano FREE: sem disco persistente; anexos em /data/storage são perdidos a cada deploy/reinício;
+# o PostgreSQL free expira após 30 dias):
+# web service (Docker) + PostgreSQL gerenciado.
 # Após o deploy, defina RG_ENCRYPTION_KEYS (python -m rg.cli gerar-chaves) e crie o admin no Shell:
 #   python -m rg.cli criar-admin
 services:
@@ -7,12 +9,8 @@ services:
     runtime: docker
     dockerfilePath: ./deploy/Dockerfile
     dockerContext: .
-    plan: starter
+    plan: free
     healthCheckPath: /api/v1/saude
-    disk:
-      name: arquivos
-      mountPath: /data/storage
-      sizeGB: 1
     envVars:
       - key: RG_AMBIENTE
         value: producao
@@ -21,6 +19,12 @@ services:
       - key: RG_SESSION_COOKIE_SECURE
         value: "true"
       - key: RG_TRUSTED_PROXIES
+        value: "1"
+      - key: RG_DB_POOL_MIN
+        value: "1"
+      - key: RG_DB_POOL_MAX
+        value: "8"
+      - key: WEB_CONCURRENCY
         value: "1"
       - key: RG_DATABASE_URL
         fromDatabase:
@@ -35,6 +39,6 @@ services:
 
 databases:
   - name: compras-db
-    plan: basic-256mb
+    plan: free
     databaseName: rg_hospital
     postgresMajorVersion: "16"
