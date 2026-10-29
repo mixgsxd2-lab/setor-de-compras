@@ -16,6 +16,10 @@ fi
 if [ -n "${RG_ADMIN_EMAIL:-}" ] && [ -n "${RG_ADMIN_SENHA:-}" ]; then
   python -m rg.cli criar-admin --nome "${RG_ADMIN_NOME:-Administrador}" --email "$RG_ADMIN_EMAIL" || echo "aviso: criar-admin falhou"
 fi
+# Modo de teste: carrega contas/dados fictícios (seletor de perfis na tela inicial). Idempotente.
+if [ "${RG_MODO_DEMO:-false}" = "true" ]; then
+  python -m rg.cli semear-demo || echo "aviso: semear-demo falhou"
+fi
 exec gunicorn wsgi:app --bind "0.0.0.0:${PORT:-8000}" --worker-class gthread \
   --workers "${WEB_CONCURRENCY:-2}" --threads 64 --timeout 120 --graceful-timeout 30 \
   --access-logfile - --forwarded-allow-ips "*"
