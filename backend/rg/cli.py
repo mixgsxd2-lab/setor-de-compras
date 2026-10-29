@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import argparse
 import getpass
+import os
 import secrets
 import sys
 
@@ -41,8 +42,8 @@ def criar_admin(nome: str | None, email: str | None, setor: str) -> None:
     app = create_app()
     nome = nome or input("Nome completo: ").strip()
     email = (email or input("E-mail: ")).strip().lower()
-    senha = getpass.getpass("Senha (mín. 12 caracteres): ")
-    if senha != getpass.getpass("Confirme a senha: "):
+    senha = os.environ.get("RG_ADMIN_SENHA") or getpass.getpass("Senha (mín. 12 caracteres): ")
+    if not os.environ.get("RG_ADMIN_SENHA") and senha != getpass.getpass("Confirme a senha: "):
         sys.exit("As senhas não conferem")
     problemas = senhas.validar_politica(senha, minimo=app.config["SENHA_MIN_CARACTERES"], email=email, nome=nome)
     if problemas:
@@ -52,6 +53,9 @@ def criar_admin(nome: str | None, email: str | None, setor: str) -> None:
     with app.app_context(), db.transacao(sistema=True, ip="cli") as cur:
         cur.execute("select 1 from rg.usuarios where lower(email) = %s", (email,))
         if cur.fetchone():
+            if os.environ.get("RG_ADMIN_SENHA"):
+                print("Administrador já existe; nada a fazer")
+                return
             sys.exit("Já existe usuário com este e-mail")
         hash_ = senhas.gerar_hash(senha)
         cur.execute(
