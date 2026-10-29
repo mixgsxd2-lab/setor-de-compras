@@ -17,6 +17,12 @@ begin
   if not exists (select 1 from pg_roles where rolname = 'rg_app') then
     create role rg_app nologin;
   end if;
+  -- Banco gerenciado com um único usuário (ex.: Render): a conexão assume rg_app via SET LOCAL ROLE.
+  begin
+    execute format('grant rg_app to %I', current_user);
+  exception when others then
+    raise notice 'não foi possível conceder rg_app a %: %', current_user, sqlerrm;
+  end;
 end $$;
 
 -- ---------------------------------------------------------------------
