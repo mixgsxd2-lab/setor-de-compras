@@ -20,6 +20,7 @@ RUN pip install -r backend/requirements.txt
 
 COPY backend/ backend/
 COPY frontend/ frontend/
+COPY deploy/start.sh deploy/start.sh
 RUN rm -f backend/.env && chown -R rg /app
 
 USER rg
@@ -28,9 +29,8 @@ EXPOSE 8000
 VOLUME ["/data/storage"]
 
 HEALTHCHECK --interval=30s --timeout=5s --retries=3 \
-  CMD python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/v1/saude', timeout=4)"
+  CMD python -c "import os,urllib.request; urllib.request.urlopen('http://127.0.0.1:%s/api/v1/saude' % os.environ.get('PORT', '8000'), timeout=4)"
 
 # gthread é obrigatório para WebSockets (cada conexão ativa ocupa uma thread).
-CMD ["gunicorn", "wsgi:app", "--bind", "0.0.0.0:8000", "--worker-class", "gthread", \
-     "--workers", "2", "--threads", "64", "--timeout", "120", "--graceful-timeout", "30", \
-     "--access-logfile", "-", "--forwarded-allow-ips", "*"]
+# A porta vem de $PORT (Render e similares); padrão 8000. O script aplica as migrações antes de subir.
+CMD ["sh", "/app/deploy/start.sh"]

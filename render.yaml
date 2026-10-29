@@ -1,0 +1,40 @@
+# Blueprint do Render: web service (Docker) + PostgreSQL gerenciado.
+# Após o deploy, defina RG_ENCRYPTION_KEYS (python -m rg.cli gerar-chaves) e crie o admin no Shell:
+#   python -m rg.cli criar-admin
+services:
+  - type: web
+    name: setor-de-compras
+    runtime: docker
+    dockerfilePath: ./deploy/Dockerfile
+    dockerContext: .
+    plan: starter
+    healthCheckPath: /api/v1/saude
+    disk:
+      name: arquivos
+      mountPath: /data/storage
+      sizeGB: 1
+    envVars:
+      - key: RG_AMBIENTE
+        value: producao
+      - key: RG_MODO_DEMO
+        value: "false"
+      - key: RG_SESSION_COOKIE_SECURE
+        value: "true"
+      - key: RG_TRUSTED_PROXIES
+        value: "1"
+      - key: RG_DATABASE_URL
+        fromDatabase:
+          name: compras-db
+          property: connectionString
+      - key: RG_SECRET_KEY
+        generateValue: true
+      - key: RG_SIGNATURE_SECRET
+        generateValue: true
+      - key: RG_ENCRYPTION_KEYS
+        sync: false
+
+databases:
+  - name: compras-db
+    plan: basic-256mb
+    databaseName: rg_hospital
+    postgresMajorVersion: "16"
