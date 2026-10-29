@@ -11,10 +11,12 @@ services:
     plan: free
     healthCheckPath: /api/v1/saude
     envVars:
+      # Ambiente de TESTE: seletor de perfis (solicitante, gestor, compras...) com dados fictícios.
+      # Para uso real: RG_AMBIENTE=producao e RG_MODO_DEMO=false.
       - key: RG_AMBIENTE
-        value: producao
+        value: desenvolvimento
       - key: RG_MODO_DEMO
-        value: "false"
+        value: "true"
       - key: RG_SESSION_COOKIE_SECURE
         value: "true"
       - key: RG_TRUSTED_PROXIES
