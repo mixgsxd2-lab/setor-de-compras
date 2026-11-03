@@ -1,0 +1,4 @@
+Flask==3.1.3
+gunicorn==23.0.0; sys_platform != "win32"
+psycopg[binary]==3.3.6   # só é usado quando DATABASE_URL aponta para um PostgreSQL
+pytest==8.4.2

@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block titulo %}Solicitações{% endblock %}
+{% block conteudo %}
+
+{% macro tabela(linhas) %}
+<table>
+  <thead><tr><th>Nº</th><th>Título</th><th class="opcional">Setor</th><th class="opcional">Solicitante</th><th class="opcional">Data</th><th>Status</th></tr></thead>
+  <tbody>
+  {% for s in linhas %}
+    <tr>
+      <td><a href="{{ url_for('detalhe', sid=s.id) }}">#{{ s.id }}</a></td>
+      <td><a href="{{ url_for('detalhe', sid=s.id) }}">{{ s.titulo }}</a>
+        {% if s.urgencia == 'urgente' %}<span class="etiqueta urgente">Urgente</span>{% endif %}</td>
+      <td class="opcional">{{ s.setor }}</td>
+      <td class="opcional">{{ s.solicitante }}</td>
+      <td class="opcional">{{ s.criado_em | data }}</td>
+      <td><span class="status {{ s.status }}">{{ STATUS[s.status] }}</span></td>
+    </tr>
+  {% else %}
+    <tr><td colspan="6" class="suave">Nenhuma solicitação.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endmacro %}
+
+{% if pendentes %}
+<section>
+  <h2>Aguardando você ({{ pendentes | length }})</h2>
+  {{ tabela(pendentes) }}
+</section>
+{% endif %}
+
+<section>
+  <h2>Todas as solicitações</h2>
+  <nav class="filtros">
+    <a href="{{ url_for('painel') }}" class="{{ 'ativo' if not status }}">Todas</a>
+    {% for codigo, nome in STATUS.items() %}
+      <a href="{{ url_for('painel', status=codigo) }}" class="{{ 'ativo' if status == codigo }}">{{ nome }}</a>
+    {% endfor %}
+  </nav>
+  {{ tabela(lista) }}
+</section>
+{% endblock %}

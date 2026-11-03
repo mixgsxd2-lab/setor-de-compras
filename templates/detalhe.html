@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% block titulo %}Solicitação #{{ s.id }}{% endblock %}
+{% block conteudo %}
+<div class="cabecalho">
+  <h1>#{{ s.id }} · {{ s.titulo }}</h1>
+  <span class="status {{ s.status }}">{{ STATUS[s.status] }}</span>
+  <button class="imprimir" onclick="window.print()">Imprimir</button>
+</div>
+
+<div class="cartao">
+  <dl>
+    <dt>Setor</dt><dd>{{ s.setor }}</dd>
+    <dt>Solicitante</dt><dd>{{ s.solicitante }}</dd>
+    <dt>Data</dt><dd>{{ s.criado_em | data }}</dd>
+    <dt>Urgência</dt><dd>{{ 'Urgente' if s.urgencia == 'urgente' else 'Normal' }}</dd>
+    <dt>Justificativa</dt><dd>{{ s.justificativa }}</dd>
+    {% if s.fornecedor %}
+    <dt>Fornecedor</dt><dd>{{ s.fornecedor }}</dd>
+    <dt>Nº do pedido</dt><dd>{{ s.numero_pedido or '—' }}</dd>
+    <dt>Valor total</dt><dd>{{ s.valor_total | moeda }}</dd>
+    <dt>Previsão de entrega</dt><dd>{{ s.previsao_entrega | data }}</dd>
+    {% endif %}
+  </dl>
+</div>
+
+<h2>Itens</h2>
+<table>
+  <thead><tr><th>Descrição</th><th>Quantidade</th><th>Unidade</th></tr></thead>
+  <tbody>
+  {% for i in itens %}<tr><td>{{ i.descricao }}</td><td>{{ i.quantidade | numero }}</td><td>{{ i.unidade }}</td></tr>{% endfor %}
+  </tbody>
+</table>
+
+{% if 'aprovar' in acoes %}
+<form method="post" class="cartao acao">
+  <h2>Aprovação</h2>
+  <label>Comentário (obrigatório para reprovar) <textarea name="comentario" rows="2"></textarea></label>
+  <div class="botoes">
+    <button class="primario" formaction="{{ url_for('agir', sid=s.id, acao='aprovar') }}">Aprovar</button>
+    <button class="perigo" formaction="{{ url_for('agir', sid=s.id, acao='reprovar') }}">Reprovar</button>
+  </div>
+</form>
+{% endif %}
+
+{% if 'comprar' in acoes %}
+<form method="post" action="{{ url_for('agir', sid=s.id, acao='comprar') }}" class="cartao acao">
+  <h2>Registrar compra</h2>
+  {% if fornecedores %}
+  <label>Fornecedor
+    <select name="fornecedor_id" required>
+      <option value="">Selecione…</option>
+      {% for f in fornecedores %}<option value="{{ f.id }}">{{ f.nome }}</option>{% endfor %}
+    </select>
+  </label>
+  {% else %}
+  <p>Nenhum fornecedor cadastrado. <a href="{{ url_for('fornecedores') }}">Cadastrar fornecedor</a></p>
+  {% endif %}
+  <div class="linha">
+    <label>Nº do pedido <input name="numero_pedido"></label>
+    <label>Valor total (R$) <input name="valor_total" required inputmode="decimal" placeholder="0,00"></label>
+    <label>Previsão de entrega <input type="date" name="previsao_entrega"></label>
+  </div>
+  <label>Observação <textarea name="comentario" rows="2"></textarea></label>
+  <div class="botoes"><button class="primario">Registrar compra</button></div>
+</form>
+{% endif %}
+
+{% if 'receber' in acoes %}
+<form method="post" action="{{ url_for('agir', sid=s.id, acao='receber') }}" class="cartao acao">
+  <h2>Recebimento</h2>
+  <label>Observação (ex.: faltou algum item?) <textarea name="comentario" rows="2"></textarea></label>
+  <div class="botoes"><button class="primario">Confirmar recebimento</button></div>
+</form>
+{% endif %}
+
+{% if 'cancelar' in acoes %}
+<form method="post" action="{{ url_for('agir', sid=s.id, acao='cancelar') }}" class="acao"
+      onsubmit="return confirm('Cancelar esta solicitação?')">
+  <button class="perigo">Cancelar solicitação</button>
+</form>
+{% endif %}
+
+<h2>Histórico</h2>
+<ul class="historico">
+  {% for h in historico %}
+  <li><strong>{{ h.acao }}</strong> por {{ h.nome }} em {{ h.criado_em | data }}
+    {% if h.comentario %}<br><span class="suave">“{{ h.comentario }}”</span>{% endif %}</li>
+  {% endfor %}
+</ul>
+{% endblock %}

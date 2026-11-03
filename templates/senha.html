@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block titulo %}Trocar senha{% endblock %}
+{% block conteudo %}
+<h1>Trocar senha</h1>
+<form method="post" class="cartao estreito">
+  <label>Senha atual <input type="password" name="atual" required></label>
+  <label>Nova senha (mínimo 8 caracteres) <input type="password" name="nova" required minlength="8"></label>
+  <div class="botoes"><button class="primario">Salvar</button></div>
+</form>
+{% endblock %}

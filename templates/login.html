@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block titulo %}Entrar{% endblock %}
+{% block conteudo %}
+<div class="login">
+  <img src="{{ url_for('static', filename='logo.svg') }}" alt="" class="logo-grande">
+  <h1>Compras · Hospital Rio Grande</h1>
+
+  <form method="post" class="cartao">
+    <label>E-mail <input type="email" name="email" required autofocus></label>
+    <label>Senha <input type="password" name="senha" required></label>
+    <button class="primario">Entrar</button>
+  </form>
+
+  {% if contas_demo %}
+  <div class="cartao">
+    <h2>Teste rápido</h2>
+    <p class="suave">Entre com um perfil de demonstração:</p>
+    {% for c in contas_demo %}
+    <form method="post">
+      <input type="hidden" name="email" value="{{ c.email }}">
+      <input type="hidden" name="senha" value="{{ c.senha }}">
+      <button class="perfil-demo"><strong>{{ PERFIS[c.perfil] }}</strong> <span>{{ c.nome }}</span></button>
+    </form>
+    {% endfor %}
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block titulo %}Usuários{% endblock %}
+{% block conteudo %}
+<h1>Usuários</h1>
+<form method="post" class="cartao">
+  <div class="linha">
+    <label>Nome <input name="nome" required></label>
+    <label>E-mail <input type="email" name="email" required></label>
+    <label>Senha inicial <input name="senha" required minlength="8"></label>
+  </div>
+  <div class="linha">
+    <label>Perfil
+      <select name="perfil">{% for codigo, nome in PERFIS.items() %}<option value="{{ codigo }}">{{ nome }}</option>{% endfor %}</select>
+    </label>
+    <label>Setor
+      <select name="setor">{% for s in setores %}<option>{{ s }}</option>{% endfor %}</select>
+    </label>
+  </div>
+  <div class="botoes"><button class="primario">Cadastrar usuário</button></div>
+</form>
+<table>
+  <thead><tr><th>Nome</th><th>E-mail</th><th>Perfil</th><th>Setor</th><th>Situação</th><th></th></tr></thead>
+  <tbody>
+  {% for u in lista %}
+    <tr class="{{ '' if u.ativo else 'inativo' }}">
+      <td>{{ u.nome }}</td><td>{{ u.email }}</td><td>{{ PERFIS[u.perfil] }}</td><td>{{ u.setor }}</td>
+      <td>{{ 'Ativo' if u.ativo else 'Inativo' }}</td>
+      <td class="acoes-linha">
+        <form method="post" action="{{ url_for('alternar_usuario', uid=u.id) }}">
+          <button>{{ 'Desativar' if u.ativo else 'Reativar' }}</button>
+        </form>
+        <form method="post" action="{{ url_for('redefinir_senha', uid=u.id) }}">
+          <input name="senha" placeholder="Nova senha" minlength="8" required>
+          <button>Redefinir</button>
+        </form>
+      </td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

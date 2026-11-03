@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block titulo %}Compras{% endblock %} · Hospital Rio Grande</title>
+  <link rel="icon" href="{{ url_for('static', filename='favicon.svg') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  {% if usuario %}
+  <header class="topo">
+    <a class="marca" href="{{ url_for('painel') }}">
+      <img src="{{ url_for('static', filename='logo.svg') }}" alt=""> Compras
+    </a>
+    <nav>
+      <a href="{{ url_for('painel') }}">Solicitações</a>
+      {% if usuario.perfil in ('solicitante', 'gestor', 'admin') %}<a href="{{ url_for('nova') }}">Nova solicitação</a>{% endif %}
+      {% if usuario.perfil in ('compras', 'admin') %}<a href="{{ url_for('fornecedores') }}">Fornecedores</a>{% endif %}
+      {% if usuario.perfil == 'admin' %}<a href="{{ url_for('usuarios') }}">Usuários</a>{% endif %}
+    </nav>
+    <div class="quem">
+      <span>{{ usuario.nome }} · {{ usuario.setor }}</span>
+      <a href="{{ url_for('trocar_senha') }}">Senha</a>
+      <a href="{{ url_for('sair') }}">Sair</a>
+    </div>
+  </header>
+  {% endif %}
+
+  <main>
+    {% for tipo, msg in get_flashed_messages(with_categories=true) %}
+      <p class="aviso {{ tipo }}">{{ msg }}</p>
+    {% endfor %}
+    {% block conteudo %}{% endblock %}
+  </main>
+</body>
+</html>
