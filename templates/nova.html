@@ -1,36 +1,50 @@
 {% extends "base.html" %}
 {% block titulo %}Nova solicitação{% endblock %}
 {% block conteudo %}
-<h1>Nova solicitação</h1>
+<div class="cabecalho-pagina">
+  <div class="titulos">
+    <a class="migalhas" href="{{ url_for('painel') }}">{{ icone("seta_esq") }} Solicitações</a>
+    <h1>Nova solicitação</h1>
+    <p class="sub">Setor {{ usuario.setor }} · será enviada ao gestor para aprovação</p>
+  </div>
+</div>
+
 <form method="post" class="cartao">
-  <label>O que você precisa? <input name="titulo" required maxlength="120" value="{{ form.get('titulo', '') }}"
-         placeholder="Ex.: Luvas de procedimento para a UTI"></label>
+  <div class="cartao-cabecalho"><h2>{{ icone("documento") }} Dados da solicitação</h2></div>
+  <div class="cartao-corpo form-grade">
+    <label class="campo inteiro"><span>O que você precisa?</span>
+      <input name="titulo" required maxlength="120" value="{{ form.get('titulo', '') }}" placeholder="Ex.: Luvas de procedimento para a UTI"></label>
+    <label class="campo"><span>Urgência</span>
+      <select name="urgencia">
+        <option value="normal">Normal</option>
+        <option value="urgente" {{ 'selected' if form.get('urgencia') == 'urgente' }}>Urgente</option>
+      </select>
+    </label>
+    <label class="campo inteiro"><span>Por que é necessário?</span>
+      <textarea name="justificativa" required>{{ form.get('justificativa', '') }}</textarea></label>
+  </div>
 
-  <label>Urgência
-    <select name="urgencia">
-      <option value="normal">Normal</option>
-      <option value="urgente" {{ 'selected' if form.get('urgencia') == 'urgente' }}>Urgente</option>
-    </select>
-  </label>
-
-  <label>Por que é necessário? <textarea name="justificativa" required rows="3">{{ form.get('justificativa', '') }}</textarea></label>
-
-  <h2>Itens</h2>
-  <table class="itens">
-    <thead><tr><th style="width:60%">Descrição</th><th>Quantidade</th><th>Unidade</th></tr></thead>
-    <tbody id="itens">
-    {% for i in range(3) %}
-      <tr>
-        <td><input name="descricao" maxlength="200"></td>
-        <td><input name="quantidade" inputmode="decimal"></td>
-        <td><select name="unidade">{% for un in unidades %}<option>{{ un }}</option>{% endfor %}</select></td>
-      </tr>
-    {% endfor %}
-    </tbody>
-  </table>
-  <button type="button" onclick="maisItem()">+ Adicionar item</button>
-
-  <div class="botoes"><button class="primario">Enviar para aprovação</button></div>
+  <div class="cartao-cabecalho"><h2>{{ icone("caixa") }} Itens</h2>
+    <button type="button" class="botao secundario pequeno" onclick="maisItem()">{{ icone("mais") }} Adicionar item</button>
+  </div>
+  <div class="tabela-envoltorio">
+    <table class="tabela tabela-itens">
+      <thead><tr><th style="width:60%">Descrição</th><th>Quantidade</th><th>Unidade</th></tr></thead>
+      <tbody id="itens">
+      {% for i in range(3) %}
+        <tr>
+          <td><input class="entrada" name="descricao" maxlength="200" aria-label="Descrição"></td>
+          <td><input class="entrada" name="quantidade" inputmode="decimal" aria-label="Quantidade"></td>
+          <td><select class="entrada" name="unidade" aria-label="Unidade">{% for un in unidades %}<option>{{ un }}</option>{% endfor %}</select></td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div class="cartao-rodape">
+    <a class="botao secundario" href="{{ url_for('painel') }}">Cancelar</a>
+    <button class="botao">Enviar para aprovação</button>
+  </div>
 </form>
 
 <script>

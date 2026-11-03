@@ -1,43 +1,55 @@
 {% extends "base.html" %}
 {% block titulo %}Solicitações{% endblock %}
 {% block conteudo %}
+<div class="cabecalho-pagina">
+  <div class="titulos">
+    <h1>Solicitações</h1>
+    <p class="sub">{{ 'Todos os setores' if usuario.perfil in ('compras', 'admin') else usuario.setor }} · {{ total }} solicitações</p>
+  </div>
+  {% if usuario.perfil in ('solicitante', 'gestor', 'admin') %}
+  <div class="acoes-pagina"><a class="botao" href="{{ url_for('nova') }}">{{ icone("mais") }} Nova solicitação</a></div>
+  {% endif %}
+</div>
 
-{% macro tabela(linhas) %}
-<table>
-  <thead><tr><th>Nº</th><th>Título</th><th class="opcional">Setor</th><th class="opcional">Solicitante</th><th class="opcional">Data</th><th>Status</th></tr></thead>
-  <tbody>
-  {% for s in linhas %}
-    <tr>
-      <td><a href="{{ url_for('detalhe', sid=s.id) }}">#{{ s.id }}</a></td>
-      <td><a href="{{ url_for('detalhe', sid=s.id) }}">{{ s.titulo }}</a>
-        {% if s.urgencia == 'urgente' %}<span class="etiqueta urgente">Urgente</span>{% endif %}</td>
-      <td class="opcional">{{ s.setor }}</td>
-      <td class="opcional">{{ s.solicitante }}</td>
-      <td class="opcional">{{ s.criado_em | data }}</td>
-      <td><span class="status {{ s.status }}">{{ STATUS[s.status] }}</span></td>
-    </tr>
-  {% else %}
-    <tr><td colspan="6" class="suave">Nenhuma solicitação.</td></tr>
+<div class="kpis">
+  {% for codigo, ic in [('aguardando_aprovacao', 'relogio'), ('aprovada', 'carrinho'), ('comprada', 'caminhao'), ('recebida', 'check_circulo')] %}
+  <a class="kpi" href="{{ url_for('painel', status=codigo) }}" {% if status == codigo %}aria-current="true"{% endif %}>
+    <span class="kpi-topo"><span class="kpi-icone {{ codigo }}">{{ icone(ic) }}</span>{{ STATUS[codigo] }}</span>
+    <span class="valor">{{ contagem[codigo] }}</span>
+  </a>
   {% endfor %}
-  </tbody>
-</table>
-{% endmacro %}
+</div>
 
-{% if pendentes %}
-<section>
-  <h2>Aguardando você ({{ pendentes | length }})</h2>
-  {{ tabela(pendentes) }}
-</section>
-{% endif %}
-
-<section>
-  <h2>Todas as solicitações</h2>
-  <nav class="filtros">
-    <a href="{{ url_for('painel') }}" class="{{ 'ativo' if not status }}">Todas</a>
+<section class="cartao">
+  <nav class="abas">
+    <a class="aba" href="{{ url_for('painel') }}" {% if not status %}aria-current="page"{% endif %}>Todas <span class="qtd">{{ total }}</span></a>
+    <a class="aba" href="{{ url_for('painel', status='minhas') }}" {% if status == 'minhas' %}aria-current="page"{% endif %}>Aguardando você <span class="qtd">{{ qtd_minhas }}</span></a>
     {% for codigo, nome in STATUS.items() %}
-      <a href="{{ url_for('painel', status=codigo) }}" class="{{ 'ativo' if status == codigo }}">{{ nome }}</a>
+      <a class="aba" href="{{ url_for('painel', status=codigo) }}" {% if status == codigo %}aria-current="page"{% endif %}>{{ nome }} <span class="qtd">{{ contagem[codigo] }}</span></a>
     {% endfor %}
   </nav>
-  {{ tabela(lista) }}
+  <div class="tabela-envoltorio">
+    <table class="tabela responsiva">
+      <thead><tr><th>Nº</th><th>Solicitação</th><th>Setor</th><th>Data</th><th>Status</th></tr></thead>
+      <tbody>
+      {% for s in lista %}
+        <tr>
+          <td class="codigo" data-rotulo="Nº">#{{ s.id }}</td>
+          <td class="principal-td">
+            <div class="principal-celula">
+              <a href="{{ url_for('detalhe', sid=s.id) }}">{{ s.titulo }}</a>
+              <small>{{ s.solicitante }}{% if s.urgencia == 'urgente' %} · <span class="badge urgente">Urgente</span>{% endif %}</small>
+            </div>
+          </td>
+          <td data-rotulo="Setor">{{ s.setor }}</td>
+          <td data-rotulo="Data" class="num">{{ s.criado_em | data }}</td>
+          <td data-rotulo="Status"><span class="badge {{ s.status }}">{{ STATUS[s.status] }}</span></td>
+        </tr>
+      {% else %}
+        <tr><td colspan="5" class="vazio">Nenhuma solicitação aqui.</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
 </section>
 {% endblock %}

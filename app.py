@@ -86,7 +86,14 @@ def login_obrigatorio(*perfis):
 
 @app.context_processor
 def variaveis_globais():
-    return {"usuario": g.get("usuario"), "PERFIS": PERFIS, "STATUS": STATUS}
+    return {"usuario": g.get("usuario"), "PERFIS": PERFIS, "STATUS": STATUS, "DEMO": DEMO,
+            "qtd_pendentes": lambda: len(pendentes(visiveis(g.usuario), g.usuario))}
+
+
+@app.template_filter("iniciais")
+def iniciais(nome):
+    partes = nome.split()
+    return (partes[0][0] + (partes[-1][0] if len(partes) > 1 else "")).upper()
 
 
 @app.template_filter("moeda")
@@ -204,23 +211,33 @@ def trocar_senha():
 # ---------------------------------------------------------------------------
 # Solicitações
 # ---------------------------------------------------------------------------
+def visiveis(u):
+    """Solicitações que o usuário pode ver, das mais novas para as mais antigas."""
+    filtro = "" if ve_tudo(u) else "WHERE s.setor = ?"
+    return todos(db(), f"""SELECT s.*, u.nome AS solicitante FROM solicitacoes s
+                           JOIN usuarios u ON u.id = s.solicitante_id
+                           {filtro} ORDER BY s.id DESC""", () if ve_tudo(u) else (u["setor"],))
+
+
+def pendentes(lista, u):
+    """O que este usuário precisa aprovar, comprar ou receber."""
+    return [s for s in lista if set(acoes_permitidas(s, u)) - {"cancelar"}]
+
+
 @app.route("/")
 @login_obrigatorio()
 def painel():
-    u = g.usuario
-    filtro_setor = "" if ve_tudo(u) else " AND s.setor = ?"
-    params = () if ve_tudo(u) else (u["setor"],)
-    lista = todos(db(), f"""SELECT s.*, u.nome AS solicitante FROM solicitacoes s
-                            JOIN usuarios u ON u.id = s.solicitante_id
-                            WHERE 1 = 1{filtro_setor}
-                            ORDER BY s.id DESC""", params)
-
-    # "Aguardando você": o que este usuário precisa aprovar, comprar ou receber
-    pendentes = [s for s in lista if set(acoes_permitidas(s, u)) - {"cancelar"}]
+    lista = visiveis(g.usuario)
+    contagem = {codigo: sum(1 for s in lista if s["status"] == codigo) for codigo in STATUS}
     status = request.args.get("status", "")
-    if status in STATUS:
-        lista = [s for s in lista if s["status"] == status]
-    return render_template("painel.html", lista=lista, pendentes=pendentes, status=status)
+    if status == "minhas":
+        filtrada = pendentes(lista, g.usuario)
+    elif status in STATUS:
+        filtrada = [s for s in lista if s["status"] == status]
+    else:
+        filtrada = lista
+    return render_template("painel.html", lista=filtrada, total=len(lista), contagem=contagem,
+                           qtd_minhas=len(pendentes(lista, g.usuario)), status=status)
 
 
 @app.route("/nova", methods=["GET", "POST"])

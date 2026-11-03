@@ -1,28 +1,53 @@
 {% extends "base.html" %}
 {% block titulo %}Entrar{% endblock %}
-{% block conteudo %}
-<div class="login">
-  <img src="{{ url_for('static', filename='logo.svg') }}" alt="" class="logo-grande">
-  <h1>Compras · Hospital Rio Grande</h1>
+{% block corpo %}
+<div class="tela-auth">
+  <section class="auth-lado" aria-hidden="true">
+    <img class="simbolo-fundo" src="{{ url_for('static', filename='simbolo-branca.svg') }}" alt="">
+    <div>
+      <img class="logo-auth" src="{{ url_for('static', filename='logo-branca.svg') }}" alt="">
+      <h1>Compras e Suprimentos do Hospital Rio Grande</h1>
+      <p class="lead">Da necessidade do setor à entrega: cada solicitação com aprovação, compra, recebimento e histórico.</p>
+      <div class="auth-fluxo">
+        <span>Solicitação</span><span>Aprovação</span><span>Compra</span><span>Recebimento</span>
+      </div>
+    </div>
+    <p class="auth-rodape">Hospital Rio Grande · Uso restrito a colaboradores autorizados</p>
+  </section>
 
-  <form method="post" class="cartao">
-    <label>E-mail <input type="email" name="email" required autofocus></label>
-    <label>Senha <input type="password" name="senha" required></label>
-    <button class="primario">Entrar</button>
-  </form>
+  <div class="auth-form-area">
+    <div class="auth-cartao">
+      <img class="logo-mobile" src="{{ url_for('static', filename='logo-primaria.svg') }}" alt="Hospital Rio Grande">
+      <div>
+        <h2>Entrar</h2>
+        <p class="texto-3">Use seu e-mail e senha do hospital.</p>
+      </div>
+      {% for tipo, msg in get_flashed_messages(with_categories=true) %}
+        <div class="aviso perigo">{{ icone("alerta") }} <span>{{ msg }}</span></div>
+      {% endfor %}
 
-  {% if contas_demo %}
-  <div class="cartao">
-    <h2>Teste rápido</h2>
-    <p class="suave">Entre com um perfil de demonstração:</p>
-    {% for c in contas_demo %}
-    <form method="post">
-      <input type="hidden" name="email" value="{{ c.email }}">
-      <input type="hidden" name="senha" value="{{ c.senha }}">
-      <button class="perfil-demo"><strong>{{ PERFIS[c.perfil] }}</strong> <span>{{ c.nome }}</span></button>
-    </form>
-    {% endfor %}
+      <form method="post" class="auth-painel">
+        <label class="campo"><span>E-mail</span><input type="email" name="email" required autofocus autocomplete="username"></label>
+        <label class="campo"><span>Senha</span><input type="password" name="senha" required autocomplete="current-password"></label>
+        <button class="botao bloco">Entrar</button>
+      </form>
+
+      {% if contas_demo %}
+      <div class="divisor">ou teste com um perfil</div>
+      <div class="perfis-demo">
+        {% for c in contas_demo %}
+        <form method="post">
+          <input type="hidden" name="email" value="{{ c.email }}">
+          <input type="hidden" name="senha" value="{{ c.senha }}">
+          <button class="perfil-demo">
+            <span class="icone-perfil">{{ icone({'solicitante': 'documento', 'gestor': 'carimbo', 'compras': 'carrinho', 'admin': 'usuarios'}[c.perfil]) }}</span>
+            <span><strong>{{ PERFIS[c.perfil] }}</strong><small>{{ c.nome }}</small></span>
+          </button>
+        </form>
+        {% endfor %}
+      </div>
+      {% endif %}
+    </div>
   </div>
-  {% endif %}
 </div>
 {% endblock %}
