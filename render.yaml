@@ -1,50 +1,28 @@
-# Blueprint do Render (plano FREE: sem disco persistente; anexos em /data/storage são perdidos a cada deploy/reinício;
-# o PostgreSQL free expira após 30 dias):
-# web service (Docker) + PostgreSQL gerenciado.
-# Defina RG_ADMIN_EMAIL e RG_ADMIN_SENHA (mín. 12 caracteres) para criar o administrador no boot.
+# Deploy no Render: um web service Python + um PostgreSQL (o disco do plano free não guarda arquivos).
+# Para uso real: DEMO=0 e defina ADMIN_EMAIL / ADMIN_SENHA (administrador criado no primeiro boot).
 services:
   - type: web
     name: setor-de-compras
-    runtime: docker
-    dockerfilePath: ./deploy/Dockerfile
-    dockerContext: .
+    runtime: python
     plan: free
-    healthCheckPath: /api/v1/saude
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app --workers 1 --threads 8 --bind 0.0.0.0:$PORT
     envVars:
-      # Ambiente de TESTE: seletor de perfis (solicitante, gestor, compras...) com dados fictícios.
-      # Para uso real: RG_AMBIENTE=producao e RG_MODO_DEMO=false.
-      - key: RG_AMBIENTE
-        value: desenvolvimento
-      - key: RG_MODO_DEMO
-        value: "true"
-      - key: RG_SESSION_COOKIE_SECURE
-        value: "true"
-      - key: RG_TRUSTED_PROXIES
+      - key: PYTHON_VERSION
+        value: "3.12.8"
+      - key: DEMO
         value: "1"
-      - key: RG_DB_POOL_MIN
-        value: "1"
-      - key: RG_DB_POOL_MAX
-        value: "8"
-      - key: WEB_CONCURRENCY
-        value: "1"
-      - key: RG_DATABASE_URL
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DATABASE_URL
         fromDatabase:
           name: compras-db
           property: connectionString
-      - key: RG_SECRET_KEY
-        generateValue: true
-      - key: RG_SIGNATURE_SECRET
-        generateValue: true
-      # Opcional: se ausente, a chave de cifragem é derivada de RG_SECRET_KEY (não troque RG_SECRET_KEY depois).
-      - key: RG_ADMIN_EMAIL
+      - key: ADMIN_EMAIL
         sync: false
-      - key: RG_ADMIN_NOME
-        value: Administrador
-      - key: RG_ADMIN_SENHA
+      - key: ADMIN_SENHA
         sync: false
 
 databases:
   - name: compras-db
     plan: free
-    databaseName: rg_hospital
-    postgresMajorVersion: "16"

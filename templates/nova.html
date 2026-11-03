@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block titulo %}Nova solicitação{% endblock %}
+{% block conteudo %}
+<h1>Nova solicitação</h1>
+<form method="post" class="cartao">
+  <label>O que você precisa? <input name="titulo" required maxlength="120" value="{{ form.get('titulo', '') }}"
+         placeholder="Ex.: Luvas de procedimento para a UTI"></label>
+
+  <label>Urgência
+    <select name="urgencia">
+      <option value="normal">Normal</option>
+      <option value="urgente" {{ 'selected' if form.get('urgencia') == 'urgente' }}>Urgente</option>
+    </select>
+  </label>
+
+  <label>Por que é necessário? <textarea name="justificativa" required rows="3">{{ form.get('justificativa', '') }}</textarea></label>
+
+  <h2>Itens</h2>
+  <table class="itens">
+    <thead><tr><th style="width:60%">Descrição</th><th>Quantidade</th><th>Unidade</th></tr></thead>
+    <tbody id="itens">
+    {% for i in range(3) %}
+      <tr>
+        <td><input name="descricao" maxlength="200"></td>
+        <td><input name="quantidade" inputmode="decimal"></td>
+        <td><select name="unidade">{% for un in unidades %}<option>{{ un }}</option>{% endfor %}</select></td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  <button type="button" onclick="maisItem()">+ Adicionar item</button>
+
+  <div class="botoes"><button class="primario">Enviar para aprovação</button></div>
+</form>
+
+<script>
+  function maisItem() {
+    const linhas = document.getElementById("itens");
+    const nova = linhas.rows[0].cloneNode(true);
+    nova.querySelectorAll("input").forEach(i => i.value = "");
+    linhas.appendChild(nova);
+  }
+</script>
+{% endblock %}
