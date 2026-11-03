@@ -45,7 +45,7 @@ Para usar sem os dados de teste, defina `DEMO=0` antes do primeiro início. Em u
 app.py         telas e regras do fluxo
 banco.py       banco de dados e dados de teste
 templates/     páginas HTML
-static/        estilo e logotipo
+static/        estilo, fonte Inter e logotipos
 tests/         teste do fluxo completo (python -m pytest)
 ```
 

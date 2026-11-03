@@ -1,3 +1,4 @@
+{% from "_icones.html" import icone %}
 <!doctype html>
 <html lang="pt-BR">
 <head>
@@ -5,33 +6,69 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block titulo %}Compras{% endblock %} · Hospital Rio Grande</title>
   <link rel="icon" href="{{ url_for('static', filename='favicon.svg') }}">
+  <link rel="preload" href="{{ url_for('static', filename='fontes/inter-latin.woff2') }}" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-  {% if usuario %}
-  <header class="topo">
-    <a class="marca" href="{{ url_for('painel') }}">
-      <img src="{{ url_for('static', filename='logo.svg') }}" alt=""> Compras
+{% block corpo %}
+{% set pagina = request.endpoint %}
+<div class="shell">
+  <aside class="sidebar">
+    <a class="sidebar-marca" href="{{ url_for('painel') }}">
+      <img src="{{ url_for('static', filename='logo-branca.svg') }}" alt="Hospital Rio Grande">
     </a>
-    <nav>
-      <a href="{{ url_for('painel') }}">Solicitações</a>
-      {% if usuario.perfil in ('solicitante', 'gestor', 'admin') %}<a href="{{ url_for('nova') }}">Nova solicitação</a>{% endif %}
-      {% if usuario.perfil in ('compras', 'admin') %}<a href="{{ url_for('fornecedores') }}">Fornecedores</a>{% endif %}
-      {% if usuario.perfil == 'admin' %}<a href="{{ url_for('usuarios') }}">Usuários</a>{% endif %}
-    </nav>
-    <div class="quem">
-      <span>{{ usuario.nome }} · {{ usuario.setor }}</span>
-      <a href="{{ url_for('trocar_senha') }}">Senha</a>
-      <a href="{{ url_for('sair') }}">Sair</a>
+    <div class="sidebar-modulo">
+      <span class="icone-modulo">{{ icone("carrinho") }}</span>
+      <span><strong>Compras</strong><small>{{ usuario.setor }}</small></span>
     </div>
-  </header>
-  {% endif %}
+    <nav>
+      <div class="grupo-titulo">Solicitações</div>
+      <a class="nav-item" href="{{ url_for('painel') }}" {% if pagina in ('painel', 'detalhe') %}aria-current="page"{% endif %}>
+        {{ icone("painel") }} <span>Solicitações</span>
+        {% set n = qtd_pendentes() %}{% if n %}<span class="contagem" title="Aguardando você">{{ n }}</span>{% endif %}
+      </a>
+      {% if usuario.perfil in ('solicitante', 'gestor', 'admin') %}
+      <a class="nav-item" href="{{ url_for('nova') }}" {% if pagina == 'nova' %}aria-current="page"{% endif %}>{{ icone("mais") }} <span>Nova solicitação</span></a>
+      {% endif %}
+      {% if usuario.perfil in ('compras', 'admin') %}
+      <div class="grupo-titulo">Cadastros</div>
+      <a class="nav-item" href="{{ url_for('fornecedores') }}" {% if pagina == 'fornecedores' %}aria-current="page"{% endif %}>{{ icone("fornecedor") }} <span>Fornecedores</span></a>
+      {% endif %}
+      {% if usuario.perfil == 'admin' %}
+      <a class="nav-item" href="{{ url_for('usuarios') }}" {% if pagina == 'usuarios' %}aria-current="page"{% endif %}>{{ icone("usuarios") }} <span>Usuários</span></a>
+      {% endif %}
+      <div class="grupo-titulo">Conta</div>
+      <a class="nav-item" href="{{ url_for('trocar_senha') }}" {% if pagina == 'trocar_senha' %}aria-current="page"{% endif %}>{{ icone("cadeado") }} <span>Trocar senha</span></a>
+      <a class="nav-item" href="{{ url_for('sair') }}">{{ icone("sair") }} <span>Sair</span></a>
+    </nav>
+  </aside>
+  <div class="overlay-menu" onclick="document.documentElement.removeAttribute('data-menu')"></div>
 
-  <main>
-    {% for tipo, msg in get_flashed_messages(with_categories=true) %}
-      <p class="aviso {{ tipo }}">{{ msg }}</p>
-    {% endfor %}
-    {% block conteudo %}{% endblock %}
-  </main>
+  <div class="principal">
+    <header class="topbar">
+      <button class="icone-botao apenas-mobile" aria-label="Abrir menu"
+              onclick="document.documentElement.setAttribute('data-menu', 'aberto')">{{ icone("menu") }}</button>
+      <span class="espaco"></span>
+      {% if DEMO %}<span class="selo-demo">Ambiente de teste</span>{% endif %}
+      <div class="usuario">
+        <span class="avatar">{{ usuario.nome | iniciais }}</span>
+        <span class="dados"><strong>{{ usuario.nome }}</strong><small>{{ PERFIS[usuario.perfil] }}</small></span>
+      </div>
+      <a class="icone-botao" href="{{ url_for('sair') }}" title="Sair" aria-label="Sair">{{ icone("sair") }}</a>
+    </header>
+
+    <main class="conteudo">
+      <div class="conteudo-interno">
+        {% for tipo, msg in get_flashed_messages(with_categories=true) %}
+          <div class="aviso {{ 'sucesso' if tipo == 'ok' else 'perigo' }}">
+            {{ icone("check_circulo" if tipo == 'ok' else "alerta") }} <span>{{ msg }}</span>
+          </div>
+        {% endfor %}
+        {% block conteudo %}{% endblock %}
+      </div>
+    </main>
+  </div>
+</div>
+{% endblock %}
 </body>
 </html>

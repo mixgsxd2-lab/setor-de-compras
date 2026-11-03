@@ -1,24 +1,38 @@
 {% extends "base.html" %}
 {% block titulo %}Fornecedores{% endblock %}
 {% block conteudo %}
-<h1>Fornecedores</h1>
+<div class="cabecalho-pagina">
+  <div class="titulos"><h1>Fornecedores</h1><p class="sub">{{ lista | length }} cadastrados</p></div>
+</div>
+
 <form method="post" class="cartao">
-  <div class="linha">
-    <label>Nome <input name="nome" required></label>
-    <label>CNPJ <input name="cnpj"></label>
-    <label>Telefone <input name="telefone"></label>
-    <label>E-mail <input type="email" name="email"></label>
+  <div class="cartao-cabecalho"><h2>{{ icone("mais") }} Novo fornecedor</h2></div>
+  <div class="cartao-corpo form-grade">
+    <label class="campo"><span>Nome</span><input name="nome" required></label>
+    <label class="campo"><span>CNPJ</span><input name="cnpj" placeholder="00.000.000/0000-00"></label>
+    <label class="campo"><span>Telefone</span><input name="telefone"></label>
+    <label class="campo"><span>E-mail</span><input type="email" name="email"></label>
   </div>
-  <div class="botoes"><button class="primario">Cadastrar</button></div>
+  <div class="cartao-rodape"><button class="botao">Cadastrar</button></div>
 </form>
-<table>
-  <thead><tr><th>Nome</th><th>CNPJ</th><th>Telefone</th><th>E-mail</th></tr></thead>
-  <tbody>
-  {% for f in lista %}
-    <tr><td>{{ f.nome }}</td><td>{{ f.cnpj or '—' }}</td><td>{{ f.telefone or '—' }}</td><td>{{ f.email or '—' }}</td></tr>
-  {% else %}
-    <tr><td colspan="4" class="suave">Nenhum fornecedor cadastrado.</td></tr>
-  {% endfor %}
-  </tbody>
-</table>
+
+<section class="cartao">
+  <div class="tabela-envoltorio">
+    <table class="tabela responsiva">
+      <thead><tr><th>Nome</th><th>CNPJ</th><th>Telefone</th><th>E-mail</th></tr></thead>
+      <tbody>
+      {% for f in lista %}
+        <tr>
+          <td class="principal-td"><div class="principal-celula"><strong>{{ f.nome }}</strong></div></td>
+          <td data-rotulo="CNPJ" class="num">{{ f.cnpj or '—' }}</td>
+          <td data-rotulo="Telefone">{{ f.telefone or '—' }}</td>
+          <td data-rotulo="E-mail">{{ f.email or '—' }}</td>
+        </tr>
+      {% else %}
+        <tr><td colspan="4" class="vazio">Nenhum fornecedor cadastrado.</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
 {% endblock %}

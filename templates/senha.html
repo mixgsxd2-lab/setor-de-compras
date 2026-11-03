@@ -1,10 +1,12 @@
 {% extends "base.html" %}
 {% block titulo %}Trocar senha{% endblock %}
 {% block conteudo %}
-<h1>Trocar senha</h1>
-<form method="post" class="cartao estreito">
-  <label>Senha atual <input type="password" name="atual" required></label>
-  <label>Nova senha (mínimo 8 caracteres) <input type="password" name="nova" required minlength="8"></label>
-  <div class="botoes"><button class="primario">Salvar</button></div>
+<div class="cabecalho-pagina"><div class="titulos"><h1>Trocar senha</h1></div></div>
+<form method="post" class="cartao" style="max-width: 460px;">
+  <div class="cartao-corpo" style="display: grid; gap: 16px;">
+    <label class="campo"><span>Senha atual</span><input type="password" name="atual" required autocomplete="current-password"></label>
+    <label class="campo"><span>Nova senha</span><input type="password" name="nova" required minlength="8" autocomplete="new-password"><small>Mínimo 8 caracteres.</small></label>
+  </div>
+  <div class="cartao-rodape"><button class="botao">Salvar</button></div>
 </form>
 {% endblock %}
